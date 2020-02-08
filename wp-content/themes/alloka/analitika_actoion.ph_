@@ -1,0 +1,114 @@
+<?php /* Template Name: Аналитика Акция */
+ require('./wp-blog-header.php');
+ require_once('header.php');
+ ?>
+<script type="text/javascript" src="<?php echo bloginfo('template_url'); ?>/js/slides.min.jquery.js"></script>
+ 
+ 
+<!-- Разместите этот тег в теге head или непосредственно перед закрывающим тегом body -->
+<!--script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script-->
+
+<!-- Put this script tag to the <head> of your page -->
+<!--script type="text/javascript" src="http://userapi.com/js/api/openapi.js?34"></script>
+
+<script type="text/javascript">
+  VK.init({apiId: 2688747, onlyWidgets: true});
+</script-->
+
+<script type="text/javascript">
+		$(function(){
+			$('#slides').slides({
+				play: 5000, 
+				pause: 1000,
+				preload: true,
+				hoverPause: true 
+				//generateNextPrev: true
+			});
+		});
+		$(function(){
+			$('#slider2').slides({
+				play: 5000, 
+				pause: 1000,
+				preload: true,
+				hoverPause: true 
+				//generateNextPrev: true
+			});
+		});
+</script>
+</head>
+<body>
+<div class="b_wraper">
+<?php require('feedcall.php'); ?>	
+
+	<div class="fcontainer"></div>
+	<?php require('headerblockanalit.php'); ?>
+	
+		<div class="b_block_analitik_action1">
+		<div class="free_min_left"></div>
+		<div class="free_min_right"></div>
+		
+		<div class="b_band b_analitik_action_band1">
+			<h1 class="title_center">Предоставляется бесплатно!<br /><span>об услуге Alloka.Аналитика</span></h1>
+			
+			<p class="free_big"><img src="<?php echo bloginfo('template_url'); ?>/images/free_big.png" alt="" /></p>
+			
+			<p class="analitik_action_toptxt"><b>Компания «Аллока» объявляет специальную акцию.<br />Только до 31 августа 2012 г. инструмент «Аллока. Аналитика»<br />для оценки любых рекламных кампаний</b></p>
+			
+			<p class="analitik_action_topredtxt"><b>предоставляется бесплатно!</b></p>
+			
+			<p class="analitik_action_graf">Сколько звонков принес корпоративный сайт? Каков выхлоп после трансляции видеоролика на федеральном канале? Сегодня у вас есть возможность измерить эффективность рекламной кампании абсолютно бесплатно. </p>
+			
+		</div>
+	</div>
+	
+	<div class="b_block_analitik_action2">
+		<div class="b_band b_analitik_action_band2">
+			<p class="analitik_redbg_title">Компания &laquo;Аллока&raquo; разработала уникальный инструмент, позволяющий с высокой точностью определить количество звонков, поступивших благодаря каждому рекламному каналу.</p>
+			<div class="analitik_redbg_itm">
+				<img src="<?php echo bloginfo('template_url'); ?>/images/analitik_action_red_itm1.png" alt="" />
+				<p>Вы разместили ролик на ТВ? Посчитайте количество обращений благодаря телевидению. </p>
+			</div>
+			<div class="analitik_redbg_itm">
+				<img src="<?php echo bloginfo('template_url'); ?>/images/analitik_action_red_itm2.png" alt="" />
+				<p>Вы разместили рекламные щиты на выезде из города? Узнайте данные о количестве прямых обращений с наружной рекламы.</p>
+			</div>
+			<div class="analitik_redbg_itm">
+				<img src="<?php echo bloginfo('template_url'); ?>/images/analitik_action_red_itm3.png" alt="" />
+				<p>Сколько звонков вы получили с сайта? С помощью системы «Аллока. Аналитика» вы можете измерить эффективность любого медиа-канала, включая как офф-лайн, так и он-лайн коммуникации. </p>
+			</div>
+		</div>
+	</div>
+		
+	
+	<div class="b_block_analitik_action3">
+		<div class="b_band b_analitik_action_band3">
+			<p>&laquo;Аллока. Аналитика&raquo;  позволяет фиксировать такие параметры звонка, как: источник обращения, дата, время, длительность, входящий номер абонента. При желании можно подключить официальную запись разговоров с клиентами, а также интеграцию системы в CRM, что значительно упрощает работу менеджеров компании с контактами клиентов.</p>
+			
+			<p class="analitik_action3_big"><b>Долой гадание на кофейной гуще и пляски с бубном у ритуального костра!</b></p>
+			
+			<p>Теперь эффективность рекламной кампании можно посчитать максимально точно и достоверно. Чтобы получить доступ к системе, необходимо обратиться в компанию &laquo;Аллока&raquo; и бесплатно заказать рекламный инструмент «Аллока. Аналитика».</p>
+			
+		</div>
+	</div>
+	
+	
+	
+	<div class="b_block_analitik_action4">
+		<div class="b_band b_analitik_action_band4">
+			
+			<p class="analitik_action4_txt">Акция для действует до 31 августа 2012 г.</p>
+			
+			<input class="knopka obrif" type="submit" value="Заказать услугу" />
+		</div>
+	</div>
+	<div class="b_clear"></div>
+	<?php require('brif.php'); ?>
+</div> 
+<!--wraper end-->
+<?php require('footer.php'); ?>
+</body>
+</html>
+
+
+
+
