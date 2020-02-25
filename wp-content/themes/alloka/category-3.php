@@ -1,156 +1,132 @@
 <?php  /* Template Name: Блог */
  require('./wp-blog-header.php');
- require_once('header.php');
+ require_once('header_v2.php');
  ?>
-
-</head>
 <body>
-<?php include_once('googletag.php'); ?>
-<div class="b_wraper">
-<div class="blog_topbg"></div>
+<?php include_once('googletag.php'); //todo: проверить гугл тэг ?>
+<!-- Page -->
+<div class="page" id="root">
+	<div class="page__layout">
+		<form action="#" class="page__search search">
+			<label class="search__field">
+				<input type="text" class="search__input" placeholder="Искать по статьям" required>
+				<button class="search__button"></button>
+			</label>
+		</form>
 
-<?php require('feedcall.php'); ?>	
+		<h1 class="page__title title">Наши мысли</h1>
+		<?php
+		echo get_the_tag_list('<ul class="page__taglist taglist"><li class="taglist__item">','</li><li class="taglist__item">','</li></ul>');
+		?>k
 
-	<div class="fcontainer"></div>
-	<div class="b_block1_blog">
-	
-		<div class="b_band b_band1">
-			<div class="header1">
-				<a href="/" class="logo"><img alt="" src="<?php echo bloginfo('template_url'); ?>/images/logo_blog.png" /></a>
-				<ul class="b_toplink_blog">
-					<li><a href="/">Вход в личный кабинет</a></li>
-				</ul>
-				<ul class="select_city_blog">
-					<li><p class="regselect_blog ph1" style="border:none;">Москва</p></li>
-					<li><p class="regselect_blog ph2">Н.Новгород</p></li>
-					<li><p class="regselect_blog ph3">С.-Петербург</p></li>
-				</ul>
-				<p class="tphone_blog">
-					<span style="display:block;">(499) 400-24-91</span>
-					<span>(831) 230-30-35</span>
-					<span>(812) 600-16-22</span>
-				</p>
-				<p class="fcall fcall_blogs">Заказать обратный звонок</p>
-				<p class="regakk"><a href="http://analytics.alloka.ru/sign_up">Зарегистрировать аккаунт</a></p>
-			
-			
-				<ul class="b_menu b_menu_blog">
-					<li><a href="/o-kompanii/">О компании</a></li>
-					<li><a href="/o-platforme/">О платформе</a></li>
-					<li><a href="/otzyivyi/">Отзывы клиентов</a></li>
-					<li><a href="/blog/">Блог</a></li>
-				</ul>	
-			</div>
-			
-			
-			
-			<div class="content1 content1_in">
-				<a href="/analitika-kak-eto-rabotaet/" class="icons ianalitics_blog "><span>Alloka аналитика</span></a>
-				<a href="/o-platforme/" class="icons iplatf_blog"><span>Alloka платформа</span></a>
-				
-			</div>
-		</div>
-		
+		<div class="mainCardContainer">
+			<div class="mainCard">
+				<div class="mainCard__image" style="background-image: url('./images/temporary/card_01.jpg')"></div>
 
-	</div>
-	
-	<div class="b_block_blog2">
-		<div class="b_band b_blog_band2">
-			<h1 class="title_center">Здесь собраны все мысли<br /><span>компании Alloka</span></h1>
-			
-			<div class="b_blog_top">
-			
-				<div class="b_blog_top_right">
-					<div class="blog_cats">
-						<div class="blog_cats_top"></div>
-						<div class="blog_cats_main">
-							<p class="blog_cats_title"><b>Мы пишем на темы:</b></p>
-							<?php wp_tag_cloud('smallest=8&largest=20&number=35'); ?>
-							
-						</div>
-						<div class="blog_cats_bot"></div>
+				<div class="mainCard__content">
+					<div class="mainCard__contentHeader articleHeader">
+						<a href="#" class="articleHeader__tag tag"># alloka</a>
+						<a href="#" class="articleHeader__tag tag"># alloka analytics</a>
+						<a href="#" class="articleHeader__tag tagButton">+5 тегов показать</a>
+						<a href="#" class="articleHeader__tag tagButton tagButton_active">свернуть</a>
+						<time class="articleHeader__date">10 февраля</time>
 					</div>
-					
-					<!-- search form -->
-					<?php require ('search_form.php'); ?>
-					
-				</div>
-				
-			
-				<div class="b_blog_top_left">
-					<?php set_post_thumbnail_size( 265, 125 ); ?> <!--размер миниатюры -->
-					<?php $postcount=1; if(have_posts()) : while(have_posts()) : the_post(); ?>
-					<?php if ($postcount==1) : $postcount++;?>
-					<div class="news_itm_long_cont">
-						<div class="news_itm_long">
-							<?php /* если есть миниатюра */
-							if ( has_post_thumbnail() ) : ?>
-								<div class="news_long_img">
-									<div class="news_img"><?php the_post_thumbnail(); ?>
-									<br />
-									<p><a href="<?php the_permalink(); ?>" class="news_title"><?php the_title(); ?></a></p>
-									</div>
-									
-									<p class="news_date"><?php the_time('d.m.Y'); ?></p>
-								</div>
-								<div class="news_prev">
-									<?php echo content(60); ?>
-									<br /><?php edit_post_link('редактировать', '', ''); ?>
-								</div>
-							<?php else : ?>
-									<p><a href="<?php the_permalink(); ?>" class="news_title"><?php the_title(); ?></a></p>
-									<p class="news_date"><?php the_time('d.m.Y'); ?></p>
-									<div class="news_prev">
-										<?php echo content(35); ?>
-										<br /><?php edit_post_link('редактировать', '', ''); ?>
-									</div>
 
-							<?php endif; ?>
-						</div>
-					</div>
-					<?php else: $postcount++;?>
-					<div class="news_itm_cont">
-						<?php /* если есть миниатюра */
-							if ( has_post_thumbnail() ) : ?>
-								<div class="top_news_itm">
-									<div class="news_img"><?php the_post_thumbnail(); ?></div>
-									<p><a href="<?php the_permalink(); ?>" class="news_title"><?php the_title(); ?></a></p>
-									<p class="news_date"><?php the_time('d.m.Y'); ?></p>
-								</div>
-							<?php else : ?>
-								<div class="top_news_itm">
-									<p><a href="<?php the_permalink(); ?>" class="news_title"><?php the_title(); ?></a></p>
-									<p class="news_date"><?php the_time('d.m.Y'); ?></p>
-									<div class="news_prev">
-										<?php echo content(15); ?>
-										<br /><?php edit_post_link('редактировать', '', ''); ?>
-									</div>
-								</div>
-							<?php endif; ?>
-							
-						
-					</div>
-					<?php if ($postcount==6) $postcount=1; ?>
-					<?php endif; ?>	
-					
-					
-					
-				<?php endwhile; ?>
-				<?php else : ?>	
-					<div>
-						К сожалению, по вашему запросу ничего не найдено.
-					</div>
-				<?php endif; ?>
+					<a href="#" class="mainCard__title">Либерально настроенные коллтрекеры интегрировали-интегрировали...</a>
 				</div>
 			</div>
 		</div>
+
+		<div class="news">
+			<div class="news__list">
+				<div class="news__column">
+					<div class="news__item card">
+						<div class="card__image" style="background-image: url('./images/temporary/card_01.jpg')"></div>
+
+						<div class="card__content">
+							<div class="card__contentHeader articleHeader">
+								<a href="#" class="articleHeader__tag tag"># alloka</a>
+								<a href="#" class="articleHeader__tag tag"># alloka analytics</a>
+								<a href="#" class="articleHeader__tag tagButton">+5 тегов показать</a>
+								<a href="#" class="articleHeader__tag tagButton tagButton_active">свернуть</a>
+								<time class="articleHeader__date">10 февраля</time>
+							</div>
+
+							<a href="#" class="card__title">Либерально настроенные коллтрекеры интегрировали-интегрировали...</a>
+						</div>
+					</div>
+
+					<div class="news__item card">
+						<div class="card__image" style="background-image: url('./images/temporary/card_03.jpg')"></div>
+
+						<div class="card__content">
+							<div class="card__contentHeader articleHeader">
+								<a href="#" class="articleHeader__tag tag"># интернет-маркетинг</a>
+								<time class="articleHeader__date">12 мая</time>
+							</div>
+
+							<a href="#" class="card__title">Нижний Новгород. Деловой завтрак «Как продавать 100 квартир в месяц»</a>
+						</div>
+					</div>
+
+					<div class="news__item news__item_preview"></div>
+				</div>
+
+				<div class="news__column">
+					<div class="news__item card">
+						<div class="card__image" style="background-image: url('./images/temporary/card_02.jpg')"></div>
+
+						<div class="card__content">
+							<div class="card__contentHeader articleHeader">
+								<a href="#" class="articleHeader__tag tag"># alloka</a>
+								<time class="articleHeader__date">10 февраля</time>
+							</div>
+
+							<a href="#" class="card__title">Изменения в 152-ФЗ о персональных данных. Что нужно знать</a>
+						</div>
+					</div>
+
+					<div class="news__item card">
+						<div class="card__image" style="background-image: url('./images/temporary/card_03.jpg')"></div>
+
+						<div class="card__content">
+							<div class="card__contentHeader articleHeader">
+								<a href="#" class="articleHeader__tag tag"># интернет-маркетинг</a>
+								<time class="articleHeader__date">12 мая</time>
+							</div>
+
+							<a href="#" class="card__title">Нижний Новгород. Деловой завтрак «Как продавать 100 квартир в месяц»</a>
+						</div>
+					</div>
+
+					<div class="news__item news__item_preview"></div>
+				</div>
+
+				<div class="news__column">
+					<div class="news__item card">
+						<div class="card__image" style="background-image: url('./images/temporary/card_03.jpg')"></div>
+
+						<div class="card__content">
+							<div class="card__contentHeader articleHeader">
+								<a href="#" class="articleHeader__tag tag"># интернет-маркетинг</a>
+								<time class="articleHeader__date">12 мая</time>
+							</div>
+
+							<h6 class="card__title">Нижний Новгород. Деловой завтрак «Как продавать 100 квартир в месяц»</h6>
+						</div>
+					</div>
+
+					<div class="news__item news__item_preview"></div>
+				</div>
+			</div>
+
+			<div class="news__footer">
+				<a href="#" class="news__showMore button button_secondary">Показать еще</a>
+			</div>
+		</div>
 	</div>
-	
-
-<div class="b_clear"></div>
-
-<?php require('brif.php'); ?>
-</div> 
+</div>
+<!--/Page -->
 
 <!--wraper end-->
 <?php require('footer.php'); ?>
