@@ -11,15 +11,9 @@ class nggSitemaps {
 
     var $images	= array();
 
-    /**
-     * nggSitemaps::__construct()
-     *
-     * @return
-     */
-    function __construct() {
-
+    function __construct()
+    {
         add_filter('wpseo_sitemap_urlimages', array( &$this, 'add_wpseo_xml_sitemap_images'), 10, 2);
-
     }
 
     /**
@@ -27,7 +21,7 @@ class nggSitemaps {
      *
      * @since Version 1.8.0
      * @param array $images
-     * @param int $post ID
+     * @param int $post_id
      * @return array $image list of all founded images
      */
     function add_wpseo_xml_sitemap_images( $images, $post_id )  {
@@ -59,32 +53,37 @@ class nggSitemaps {
     /**
      * Parse the gallery/imagebrowser/slideshow shortcode and return all images into an array
      *
+     * @TODO: replace or remove this function, it's return value isn't even linked to the queries it performs
      * @param string $atts
-     * @return
+     * @return string
      */
     function add_gallery( $atts ) {
 
         global $wpdb;
 
-        extract(shortcode_atts(array(
-            'id'        => 0
-        ), $atts ));
+        $tmp = shortcode_atts(array('id' => 0), $atts, 'ngg');
+        extract($tmp);
 
-        // backward compat for user which uses the name instead, still deprecated
-        if( !is_numeric($id) )
-            $id = $wpdb->get_var( $wpdb->prepare ("SELECT gid FROM $wpdb->nggallery WHERE name = '%s' ", $id) );
+	    $gallery_mapper = C_Gallery_Mapper::get_instance();
+	    if (!is_numeric($id)) {
+	        $tmp = $gallery_mapper->select()->where(array('name = %s', $id))->limit(1)->run_query();
+		    if (($gallery = array_shift($tmp))) {
+			    $id = $gallery->{$gallery->id_field};
+		    }
+		    else $id = NULL;
+	    }
 
-        $images = nggdb::get_gallery($id, 'pid', 'ASC', true, 1000);
-
-        foreach ($images as $image) {
-            $newimage = array();
-            $newimage['src']   = $newimage['sc'] = $image->imageURL;
-            if ( !empty($image->title) )
-                $newimage['title'] = $image->title;
-            if ( !empty($image->alttext) )
-                $newimage['alt']   = $image->alttext;
-            $this->images[] = $newimage;
-        }
+	    if ($id) {
+		    $gallery_storage = C_Gallery_Storage::get_instance();
+		    $image_mapper = C_Image_Mapper::get_instance();
+		    foreach ($image_mapper->find_all_for_gallery($id) as $image) {
+			    $this->images[] = array(
+				    'src'   =>  $gallery_storage->get_image_url($image),
+				    'title' =>  $image->title,
+				    'alt'   =>  $image->alttext
+			    );
+		    }
+	    }
 
         return '';
     }
@@ -93,20 +92,19 @@ class nggSitemaps {
      * Parse the single image shortcode and return all images into an array
      *
      * @param array $atts
-     * @return
+     * @return string
      */
     function add_images( $atts ) {
 
-        extract(shortcode_atts(array(
-            'id'        => 0
-        ), $atts ));
+        $tmp = shortcode_atts(array('id' => 0), $atts, 'ngg');
+        extract($tmp);
 
         // make an array out of the ids (for thumbs shortcode))
         $pids = explode( ',', $id );
 
         // Some error checks
         if ( count($pids) == 0 )
-            return;
+            return '';
 
         $images = nggdb::find_images_in_list( $pids );
 

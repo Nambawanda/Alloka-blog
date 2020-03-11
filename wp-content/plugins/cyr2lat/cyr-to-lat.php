@@ -1,75 +1,114 @@
 <?php
-/*
-Plugin Name: Cyr-To-Lat
-Plugin URI: http://wordpress.org/extend/plugins/cyr2lat/
-Description: Converts Cyrillic characters in post and term slugs to Latin characters. Useful for creating human-readable URLs. Based on the original plugin by Anton Skorobogatov.
-Author: Sol, Sergey Biryukov
-Author URI: http://ru.wordpress.org/
-Version: 3.2
-*/ 
+/**
+ * Cyr-To-Lat
+ *
+ * Plugin Name: Cyr-To-Lat
+ * Plugin URI: https://wordpress.org/plugins/cyr2lat/
+ * Description: Converts Cyrillic characters in post and term slugs to Latin characters. Useful for creating human-readable URLs. Based on the original plugin by Anton Skorobogatov.
+ * Author: Sergey Biryukov, Mikhail Kobzarev, Igor Gergel
+ * Author URI: https://profiles.wordpress.org/sergeybiryukov/
+ * Requires at least: 5.1
+ * Tested up to: 5.3
+ * Version: 4.3.4
+ * Stable tag: 4.3.4
+ *
+ * Text Domain: cyr2lat
+ * Domain Path: /languages/
+ *
+ * @package cyr-to-lat
+ * @author  Sergey Biryukov, Mikhail Kobzarev, Igor Gergel
+ */
 
-function ctl_sanitize_title($title) {
-	global $wpdb;
+namespace Cyr_To_Lat;
 
-	$iso9_table = array(
-		'А' => 'A', 'Б' => 'B', 'В' => 'V', 'Г' => 'G', 'Ѓ' => 'G`',
-		'Ґ' => 'G`', 'Д' => 'D', 'Е' => 'E', 'Ё' => 'YO', 'Є' => 'YE',
-		'Ж' => 'ZH', 'З' => 'Z', 'Ѕ' => 'Z', 'И' => 'I', 'Й' => 'Y',
-		'Ј' => 'J', 'І' => 'I', 'Ї' => 'YI', 'К' => 'K', 'Ќ' => 'K',
-		'Л' => 'L', 'Љ' => 'L', 'М' => 'M', 'Н' => 'N', 'Њ' => 'N',
-		'О' => 'O', 'П' => 'P', 'Р' => 'R', 'С' => 'S', 'Т' => 'T',
-		'У' => 'U', 'Ў' => 'U', 'Ф' => 'F', 'Х' => 'H', 'Ц' => 'TS',
-		'Ч' => 'CH', 'Џ' => 'DH', 'Ш' => 'SH', 'Щ' => 'SHH', 'Ъ' => '``',
-		'Ы' => 'YI', 'Ь' => '`', 'Э' => 'E`', 'Ю' => 'YU', 'Я' => 'YA',
-		'а' => 'a', 'б' => 'b', 'в' => 'v', 'г' => 'g', 'ѓ' => 'g',
-		'ґ' => 'g', 'д' => 'd', 'е' => 'e', 'ё' => 'yo', 'є' => 'ye',
-		'ж' => 'zh', 'з' => 'z', 'ѕ' => 'z', 'и' => 'i', 'й' => 'y',
-		'ј' => 'j', 'і' => 'i', 'ї' => 'yi', 'к' => 'k', 'ќ' => 'k',
-		'л' => 'l', 'љ' => 'l', 'м' => 'm', 'н' => 'n', 'њ' => 'n',
-		'о' => 'o', 'п' => 'p', 'р' => 'r', 'с' => 's', 'т' => 't',
-		'у' => 'u', 'ў' => 'u', 'ф' => 'f', 'х' => 'h', 'ц' => 'ts',
-		'ч' => 'ch', 'џ' => 'dh', 'ш' => 'sh', 'щ' => 'shh', 'ь' => '',
-		'ы' => 'yi', 'ъ' => "'", 'э' => 'e`', 'ю' => 'yu', 'я' => 'ya'
-	);	
-
-	$term = $wpdb->get_var("SELECT slug FROM {$wpdb->terms} WHERE name = '$title'");
-	if ( empty($term) ) {
-		$title = strtr($title, apply_filters('ctl_table', $iso9_table));
-		$title = preg_replace("/[^A-Za-z0-9`'_\-\.]/", '-', $title);
-	} else {
-		$title = $term;
-	}
-
-	return $title;
-}
-if ( !empty($_POST) || !empty($_GET['action']) && $_GET['action'] == 'edit' || defined('XMLRPC_REQUEST') && XMLRPC_REQUEST ) {
-	add_filter('sanitize_title', 'ctl_sanitize_title', 9);
-	add_filter('sanitize_file_name', 'ctl_sanitize_title');
+// @codeCoverageIgnoreStart
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
 }
 
-function ctl_convert_existing_slugs() {
-	global $wpdb;
-
-	$posts = $wpdb->get_results("SELECT ID, post_name FROM {$wpdb->posts} WHERE post_name REGEXP('[^A-Za-z0-9\-]+') AND post_status = 'publish'");
-	foreach ( (array) $posts as $post ) {
-		$sanitized_name = ctl_sanitize_title(urldecode($post->post_name));
-		if ( $post->post_name != $sanitized_name ) {
-			add_post_meta($post->ID, '_wp_old_slug', $post->post_name);
-			$wpdb->update($wpdb->posts, array( 'post_name' => $sanitized_name ), array( 'ID' => $post->ID ));
-		}
-	}
-
-	$terms = $wpdb->get_results("SELECT term_id, slug FROM {$wpdb->terms} WHERE slug REGEXP('[^A-Za-z0-9\-]+') ");
-	foreach ( (array) $terms as $term ) {
-		$sanitized_slug = ctl_sanitize_title(urldecode($term->slug));
-		if ( $term->slug != $sanitized_slug ) {
-			$wpdb->update($wpdb->terms, array( 'slug' => $sanitized_slug ), array( 'term_id' => $term->term_id ));
-		}
-	}
+if ( ! defined( 'CYR_TO_LAT_VERSION' ) ) {
+	/**
+	 * Plugin version.
+	 */
+	define( 'CYR_TO_LAT_VERSION', '4.3.4' );
 }
 
-function ctl_schedule_conversion() {
-	add_action('shutdown', 'ctl_convert_existing_slugs');
+if ( ! defined( 'CYR_TO_LAT_PATH' ) ) {
+	/**
+	 * Path to the plugin dir.
+	 */
+	define( 'CYR_TO_LAT_PATH', dirname( __FILE__ ) );
 }
-register_activation_hook(__FILE__, 'ctl_schedule_conversion');
-?>
+
+if ( ! defined( 'CYR_TO_LAT_URL' ) ) {
+	/**
+	 * Plugin dir url.
+	 */
+	define( 'CYR_TO_LAT_URL', untrailingslashit( plugin_dir_url( __FILE__ ) ) );
+}
+
+if ( ! defined( 'CYR_TO_LAT_FILE' ) ) {
+	/**
+	 * Main plugin file.
+	 */
+	define( 'CYR_TO_LAT_FILE', __FILE__ );
+}
+
+if ( ! defined( 'CYR_TO_LAT_PREFIX' ) ) {
+	/**
+	 * Plugin prefix.
+	 */
+	define( 'CYR_TO_LAT_PREFIX', 'cyr_to_lat' );
+}
+
+if ( ! defined( 'CYR_TO_LAT_POST_CONVERSION_ACTION' ) ) {
+	/**
+	 * Post conversion action.
+	 */
+	define( 'CYR_TO_LAT_POST_CONVERSION_ACTION', 'post_conversion_action' );
+}
+
+if ( ! defined( 'CYR_TO_LAT_TERM_CONVERSION_ACTION' ) ) {
+	/**
+	 * Term conversion action.
+	 */
+	define( 'CYR_TO_LAT_TERM_CONVERSION_ACTION', 'term_conversion_action' );
+}
+
+if ( ! defined( 'CYR_TO_LAT_MINIMUM_PHP_REQUIRED_VERSION' ) ) {
+	/**
+	 * Minimum required php version.
+	 */
+	define( 'CYR_TO_LAT_MINIMUM_PHP_REQUIRED_VERSION', '5.6' );
+}
+
+if ( ! defined( 'CYR_TO_LAT_REQUIRED_MAX_INPUT_VARS' ) ) {
+	/**
+	 * Minimum required max_input_vars value.
+	 */
+	define( 'CYR_TO_LAT_REQUIRED_MAX_INPUT_VARS', 1000 );
+}
+// @codeCoverageIgnoreEnd
+
+/**
+ * Init plugin class on plugin load.
+ */
+static $cyr_to_lat_requirements;
+static $cyr_to_lat_plugin;
+
+if ( ! isset( $cyr_to_lat_requirements ) ) {
+	require_once CYR_TO_LAT_PATH . '/vendor/autoload.php';
+
+	$cyr_to_lat_requirements = new Requirements();
+}
+
+if ( ! $cyr_to_lat_requirements->are_requirements_met() ) {
+	$cyr_to_lat_plugin = false;
+
+	return;
+}
+
+if ( ! isset( $cyr_to_lat_plugin ) ) {
+	$cyr_to_lat_plugin = new Main();
+}
+

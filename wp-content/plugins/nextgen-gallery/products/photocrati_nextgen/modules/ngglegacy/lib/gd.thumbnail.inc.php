@@ -112,7 +112,8 @@ class ngg_Thumbnail {
      * @var string
      *
      */
-    function ngg_Thumbnail($fileName,$no_ErrorImage = false) {
+    function __construct($fileName,$no_ErrorImage = false)
+    {
         //make sure the GD library is installed
     	if(!function_exists("gd_info")) {
         	echo 'You do not have the GD Library installed.  This class requires the GD library to function properly.' . "\n";
@@ -144,6 +145,8 @@ class ngg_Thumbnail {
 
         //if there are no errors, determine the file format
         if($this->error == false) {
+	        @ini_set('memory_limit', -1);
+
     		$data = @getimagesize($this->fileName);
     		if (isset($data) && is_array($data)) {
     		  $extensions = array('1' => 'GIF', '2' => 'JPG', '3' => 'PNG');
@@ -721,13 +724,14 @@ class ngg_Thumbnail {
 	/**
 	 * Rotate an image clockwise or counter clockwise
 	 *
-	 * @param string $direction could be CW or CCW
+	 * @param string $dir Either CW or CCW
 	 */
-	function rotateImage( $dir = 'CW' ) {
-
+	function rotateImage($dir = 'CW')
+    {
 		$angle = ($dir == 'CW') ? 90 : -90;
 
-		if ( function_exists('imagerotate') ) {
+		if (function_exists('imagerotate'))
+		{
 	        $this->workingImage = imagerotate($this->oldImage, 360 - $angle, 0); // imagerotate() rotates CCW
 	        $this->currentDimensions['width']  = imagesx($this->workingImage);
 	    	$this->currentDimensions['height'] = imagesy($this->workingImage);

@@ -1,56 +1,55 @@
 <?php
-/**
- {
-	Module:		photocrati-attach_to_post,
-	Depends:	{ photocrati-nextgen_gallery_display }
- }
- */
 
 define('NGG_ATTACH_TO_POST_SLUG', 'nextgen-attach_to_post');
+define('NGG_ATTACH_TO_POST_VERSION', '3.2.21');
 
 class M_Attach_To_Post extends C_Base_Module
 {
 	var $attach_to_post_tinymce_plugin  = 'NextGEN_AttachToPost';
     var $_event_publisher               = NULL;
+    static $substitute_placeholders     = TRUE;
 
 	/**
 	 * Defines the module
 	 * @param string|bool $context
 	 */
-    function define($context=FALSE)
+    function define($id = 'pope-module',
+                    $name = 'Pope Module',
+                    $description = '',
+                    $version = '',
+                    $uri = '',
+                    $author = '',
+                    $author_uri = '',
+                    $context = FALSE)
     {
         parent::define(
 			'photocrati-attach_to_post',
 			'Attach To Post',
 			'Provides the "Attach to Post" interface for displaying galleries and albums',
-			'0.10',
-			'http://www.nextgen-gallery.com',
-			'Photocrati Media',
-			'http://www.photocrati.com',
+			NGG_ATTACH_TO_POST_VERSION,
+			'https://www.imagely.com/wordpress-gallery-plugin/nextgen-gallery/',
+			'Imagely',
+			'https://www.imagely.com',
 		    $context
 		);
 
-		include_once('class.attach_to_post_option_handler.php');
-		C_NextGen_Settings::add_option_handler('C_Attach_To_Post_Option_Handler', array(
+		C_NextGen_Settings::get_instance()->add_option_handler('C_Attach_To_Post_Option_Handler', array(
 			'attach_to_post_url',
 			'gallery_preview_url',
 			'attach_to_post_display_tab_js_url'
 		));
+        if (is_multisite()) C_NextGen_Global_Settings::get_instance()->add_option_handler('C_Attach_To_Post_Option_Handler', array(
+            'attach_to_post_url',
+            'gallery_preview_url',
+            'attach_to_post_display_tab_js_url'
+        ));
 
-		include_once('class.attach_to_post_installer.php');
 		C_Photocrati_Installer::add_handler($this->module_id, 'C_Attach_To_Post_Installer');
-		
-        // Set WP_ADMIN=true for better compatibility with certain themes & plugins.
-        // Unfortunately as of 3.9 in a multisite environment this causes problems.
-        if (self::is_atp_url() && (!defined('MULTISITE') || (defined('MULTISITE') && !MULTISITE)))
-            define('WP_ADMIN', true);
     }
 
-    // We only register our display-type settings forms when IS_ADMIN, but Wordpress 3.9 introduced a problem
-    // with doing this on multisite sub-sites. Now we register our forms when is_atp_url() is true OR is_admin()
     static function is_atp_url()
     {
-        return (strpos(strtolower($_SERVER['REQUEST_URI']), '/nextgen-attach_to_post') !== false) ? TRUE : FALSE;
+        return (strpos(strtolower($_SERVER['REQUEST_URI']), NGG_ATTACH_TO_POST_SLUG) !== false) ? TRUE : FALSE;
     }
 
     /**
@@ -66,7 +65,6 @@ class M_Attach_To_Post extends C_Base_Module
         return $this->_event_publisher;
     }
 
-
 	/**
 	 * Registers requires the utilites that this module provides
 	 */
@@ -77,7 +75,6 @@ class M_Attach_To_Post extends C_Base_Module
 		$this->get_registry()->add_utility(
 			'I_Attach_To_Post_Controller',
 			'C_Attach_Controller'
-//			'C_Attach_To_Post_Proxy_Controller'
 		);
 	}
 
@@ -89,11 +86,6 @@ class M_Attach_To_Post extends C_Base_Module
 		// Installs the Attach to Post module
 		$this->get_registry()->add_adapter(
 			'I_Installer', 'A_Attach_To_Post_Installer'
-		);
-
-		// Provides routing for the Attach To Post interface
-		$this->get_registry()->add_adapter(
-			'I_Router', 'A_Attach_To_Post_Routes'
 		);
 
 		// Provides AJAX actions for the Attach To Post interface
@@ -108,51 +100,208 @@ class M_Attach_To_Post extends C_Base_Module
 		);
 	}
 
+	function does_request_require_frame_communication()
+	{
+		return (strpos($_SERVER['REQUEST_URI'], 'attach_to_post') !== FALSE OR (isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'attach_to_post') !== FALSE) OR array_key_exists('attach_to_post', $_REQUEST));
+	}
+
+	function disable_resource_manager($retval)
+	{
+		if (isset($_REQUEST[NGG_ATTACH_TO_POST_SLUG])) $retval = FALSE;
+		return $retval;
+	}
 
 	function _register_hooks()
 	{
-		if (is_admin()) {
-			add_action(
-				'admin_enqueue_scripts',
-				array(&$this, 'enqueue_static_resources'),
-				1
-			);
+        add_action('ngg_routes', array($this, 'define_routes'), 2);
+
+        add_filter('wpseo_opengraph_image',   array($this, 'hide_preview_image_from_yoast'));
+        add_filter('wpseo_twitter_image',     array($this, 'hide_preview_image_from_yoast'));
+        add_filter('wpseo_sitemap_urlimages', array($this, 'remove_preview_images_from_yoast_sitemap'), NULL, 2);
+
+        // Emit frame communication events
+		if ($this->does_request_require_frame_communication()) {
+			add_action('ngg_created_new_gallery',	array(&$this, 'new_gallery_event'));
+			add_action('ngg_after_new_images_added',array(&$this, 'images_added_event'));
+			add_action('ngg_page_event',			array(&$this, 'nextgen_page_event'));
+			add_action('ngg_manage_tags',           array(&$this, 'manage_tags_event'));
 		}
 
-		// Add hook to delete displayed galleries when removed from a post
-		add_action('pre_post_update', array(&$this, 'locate_stale_displayed_galleries'));
-		add_action('before_delete_post', array(&$this, 'locate_stale_displayed_galleries'));
-		add_action('post_updated',	array(&$this, 'cleanup_displayed_galleries'));
-		add_action('after_delete_post', array(&$this, 'cleanup_displayed_galleries'));
+		// Admin-only hooks
+		if (is_admin()) {
+			add_filter('run_ngg_resource_manager', array(&$this, 'disable_resource_manager'));
 
+			add_action(
+				'admin_enqueue_scripts',
+				array($this, 'enqueue_static_resources'),
+				-100
+			);
+
+            // Elementor's editor.php runs `new \WP_Scripts()` which requires we enqueue scripts on both
+            // admin_enqueue_scripts and this action if we want our resources to be used with the page builder.
+            add_action(
+                'elementor/editor/after_enqueue_scripts',
+                array($this, 'enqueue_static_resources')
+            );
+
+			add_action('admin_init', array(&$this, 'route_insert_gallery_window'));
+
+			add_action('media_buttons', array($this, 'add_media_button'), 15);
+			add_action('admin_enqueue_scripts', array($this, 'enqueue_tinymce_resources'));
+			add_filter('mce_buttons', array(&$this, 'add_attach_to_post_button'));
+			add_filter('mce_external_plugins', array(&$this, 'add_attach_to_post_tinymce_plugin'));
+			add_filter('wp_mce_translation', array($this, 'add_attach_to_post_tinymce_i18n'));
+			add_action('admin_print_scripts', array(&$this, 'print_tinymce_placeholder_template'));
+		}
+
+		// Frontend-only hooks
+		if (!is_admin()) {
 		// Add hook to subsitute displayed gallery placeholders
-		add_filter('the_content', array(&$this, 'substitute_placeholder_imgs'), PHP_INT_MAX, 1);
+			add_filter('the_content', array(&$this, 'substitute_placeholder_imgs'), PHP_INT_MAX, 1);
+		}
+	}
 
-		// Emit frame communication events
-		add_action('ngg_created_new_gallery',	array(&$this, 'new_gallery_event'));
-		add_action('ngg_after_new_images_added',array(&$this, 'images_added_event'));
-		add_action('ngg_page_event',			array(&$this, 'nextgen_page_event'));
-        add_action('ngg_manage_tags',           array(&$this, 'manage_tags_event'));
-
-        // We use two hooks here because we need it to execute for both the post-new.php
-        // page and ATP interface
-        add_action('plugins_loaded',            array(&$this, 'fix_ie11'), 1);
-        add_action('admin_init',                array(&$this, 'fix_ie11'), PHP_INT_MAX-1);
-        add_action('admin_enqueue_scripts',     array(&$this, 'fix_ie11'), 1);
-        add_action('admin_enqueue_scripts',     array(&$this, 'fix_ie11'), PHP_INT_MAX-1);
+	/**
+	 * Renders the underscore template used by TinyMCE for IGW placeholders
+	 */
+	function print_tinymce_placeholder_template()
+	{
+		readfile(C_Fs::get_instance()->join_paths(
+			$this->get_registry()->get_module_dir('photocrati-attach_to_post'),
+			'templates',
+			'tinymce_placeholder.php'
+		));
 	}
 
     /**
-     * WordPress sets the X-UA-Compatible header to IE=edge. Unfortunately, this causes problems with Plupload,
-     * so we have the send this header
+     * Prevents ATP preview image placeholders from being used as opengraph / twitter metadata
+     *
+     * @param string $image
+     * @return null|string
      */
-    function fix_ie11()
+	function hide_preview_image_from_yoast($image)
     {
-        if ((array_search('attach_to_post', array_keys($_REQUEST)) !== FALSE OR strpos($_SERVER['REQUEST_URI'], NGG_ATTACH_TO_POST_SLUG) !== FALSE OR strpos($_SERVER['REQUEST_URI'], 'wp-admin/post.php') !== FALSE OR strpos($_SERVER['REQUEST_URI'], 'wp-admin/post-new.php') !== FALSE)) {
-            if (!headers_sent()) {
-                header('X-UA-Compatible: IE=EmulateIE10');
-            }
+        if (strpos($image, NGG_ATTACH_TO_POST_SLUG) !== FALSE)
+            return null;
+        return $image;
+    }
+
+	/**
+	 * Removes IGW preview/placeholder images from Yoast's sitemap
+	 * @param $images
+	 * @param $post_id
+	 * @return array
+	 */
+	function remove_preview_images_from_yoast_sitemap($images, $post_id)
+	{
+		$retval = array();
+
+		foreach ($images as $image) {
+			if (strpos($image['src'], NGG_ATTACH_TO_POST_SLUG) === FALSE) {
+				$retval[] = $image;
+			}
+			else {
+				// Lookup images for the displayed gallery
+				if (preg_match('/(\d+)$/', $image['src'], $match)) {
+					$displayed_gallery_id = $match[1];
+					$mapper = C_Displayed_Gallery_Mapper::get_instance();
+					$displayed_gallery = $mapper->find($displayed_gallery_id, TRUE);
+					if ($displayed_gallery) {
+						$gallery_storage = C_Gallery_Storage::get_instance();
+						$settings		 = C_NextGen_Settings::get_instance();
+						$source_obj = $displayed_gallery->get_source();
+						if (in_array('image', $source_obj->returns)) {
+							foreach ($displayed_gallery->get_entities() as $image) {
+								$named_image_size = $settings->imgAutoResize ? 'full' : 'thumb';
+
+								$sitemap_image = array(
+									'src'	=>	$gallery_storage->get_image_url($image, $named_image_size),
+									'alt'	=>	$image->alttext,
+									'title'	=>	$image->description ? $image->description: $image->alttext
+								);
+								$retval[] = $sitemap_image;
+							}
+						}
+					}
+
+				}
+			}
+		}
+
+		return $retval;
+	}
+
+	/**
+	 * In 2.0.66.X and earlier, ATP placeholder images used a different url than
+	 * what 2.0.69 uses. Therefore, we need to convert those
+	 * @param string $content
+	 * @return string
+	 */
+	function fix_preview_images($content)
+	{
+		$content = str_replace(
+			site_url('/'.NGG_ATTACH_TO_POST_SLUG.'/preview/id--'),
+			admin_url('/?'.NGG_ATTACH_TO_POST_SLUG.'='.NGG_ATTACH_TO_POST_SLUG.'/preview/id--'),
+			$content
+		);
+
+		$content = str_replace(
+			site_url('/index.php/'.NGG_ATTACH_TO_POST_SLUG.'/preview/id--'),
+			admin_url('/?'.NGG_ATTACH_TO_POST_SLUG.'='.NGG_ATTACH_TO_POST_SLUG.'/preview/id--'),
+			$content
+		);
+
+		return $content;
+	}
+	
+	function add_media_button()
+	{
+        if (in_array(FALSE, array(
+            M_Security::is_allowed('NextGEN Attach Interface'),
+            M_Security::is_allowed('NextGEN Use TinyMCE'))))
+            return;
+
+		$router = C_Router::get_instance();
+		$button_url = $router->get_static_url('photocrati-attach_to_post#igw_button.png');
+		$label		= __('Add Gallery', 'nggallery');
+		$igw_url    = admin_url('/?'.NGG_ATTACH_TO_POST_SLUG.'=1&KeepThis=true&TB_iframe=true&height=600&width=1000');
+
+		echo sprintf('<a href="%s" data-editor="content" class="button ngg-add-gallery thickbox" id="ngg-media-button" class="button" ><img src="%s" style="padding:0 4px 0 0; margin-left: -2px; margin-top:-3px; max-width: 20px;">%s</a>', $igw_url, $button_url, $label);
+	}
+
+	/**
+	* Route the IGW requests using wp-admin
+	* @throws E_Clean_Exit
+	*/
+    function route_insert_gallery_window()
+    {
+        if (isset($_REQUEST[NGG_ATTACH_TO_POST_SLUG])) {
+	        $controller = C_Attach_Controller::get_instance();
+	        if ($_REQUEST[NGG_ATTACH_TO_POST_SLUG] == 'js') {
+		        $controller->display_tab_js_action();
+	        }
+	        elseif (strpos($_REQUEST[NGG_ATTACH_TO_POST_SLUG], '/preview') !== FALSE) {
+		        $controller->preview_action();
+	        }
+	        else {
+		        $controller->index_action();
+	        }
+
+            throw new E_Clean_Exit;
         }
+    }
+
+	/**
+	 * @param C_Router $router
+	 */
+    function define_routes($router)
+    {
+        $app = $router->create_app('/'.NGG_ATTACH_TO_POST_SLUG);
+        $app->rewrite('/preview/{id}',			'/preview/id--{id}');
+        $app->rewrite('/display_tab_js/{id}',	'/display_tab_js/id--{id}');
+        $app->route('/preview',			'I_Attach_To_Post_Controller#preview');
+        $app->route('/display_tab_js',	'I_Attach_To_Post_Controller#display_tab_js');
+        $app->route('/',				'I_Attach_To_Post_Controller#index');
     }
 
 	/**
@@ -162,38 +311,28 @@ class M_Attach_To_Post extends C_Base_Module
      */
     function substitute_placeholder_imgs($content)
     {
-		// Get some utilities
-		$mapper = $this->get_registry()->get_utility('I_Displayed_Gallery_Mapper');
-		$router	= $this->get_registry()->get_utility('I_Router');
+	    $content = $this->fix_preview_images($content);
 
-		// To match ATP entries we compare the stored url against a generic path
-		// We must check HTTP and HTTPS as well as permalink and non-permalink forms
-		$preview_url = parse_url($router->join_paths(
-			$router->remove_url_segment('index.php', $router->get_base_url('root')),
-			'/nextgen-attach_to_post/preview'
-		));
-        $router->debug = TRUE;
-		$preview_url = preg_quote($preview_url['host'] . $preview_url['path'], '#');
+	    // To match ATP entries we compare the stored url against a generic path; entries MUST have a gallery ID
+		if (preg_match_all("#<img.*http(s)?://(.*)?".NGG_ATTACH_TO_POST_SLUG."(=|/)preview(/|&|&amp;)id(=|--)(\\d+).*?>#mi", $content, $matches, PREG_SET_ORDER)) {
 
-		$alt_preview_url = parse_url($router->join_paths(
-			$router->remove_url_segment('index.php', $router->get_base_url('root')),
-			'index.php/nextgen-attach_to_post/preview'
-		));
-		$alt_preview_url = preg_quote($alt_preview_url['host'] . $alt_preview_url['path'], '#');
-
-		// The placeholder MUST have a gallery instance id
-		if (preg_match_all("#<img.*http(s)?://({$preview_url}|{$alt_preview_url})/id--(\\d+).*\\/>#mi", $content, $matches, PREG_SET_ORDER)) {
+            $mapper = C_Displayed_Gallery_Mapper::get_instance();
 			foreach ($matches as $match) {
 				// Find the displayed gallery
-				$displayed_gallery_id = $match[3];
+				$displayed_gallery_id = $match[6];
 				$displayed_gallery = $mapper->find($displayed_gallery_id, TRUE);
 
 				// Get the content for the displayed gallery
 				$retval = '<p>'._('Invalid Displayed Gallery').'</p>';
 				if ($displayed_gallery) {
-					$renderer = $this->get_registry()->get_utility('I_Displayed_Gallery_Renderer');
-					$retval = $renderer->render($displayed_gallery, TRUE);
+                    $retval = '';
+					$renderer = C_Displayed_Gallery_Renderer::get_instance();
+                    if (defined('NGG_SHOW_DISPLAYED_GALLERY_ERRORS') && NGG_SHOW_DISPLAYED_GALLERY_ERRORS && $displayed_gallery->is_invalid()) {
+                        $retval .= var_export($displayed_gallery->get_errors(), TRUE);
+                    }
+                    if (self::$substitute_placeholders) $retval .= $renderer->render($displayed_gallery, TRUE);
 				}
+
 				$content = str_replace($match[0], $retval, $content);
 			}
 		}
@@ -206,67 +345,130 @@ class M_Attach_To_Post extends C_Base_Module
 	 */
 	function enqueue_static_resources()
 	{
-		$router = $this->get_registry()->get_utility('I_Router');
+		$router = C_Router::get_instance();
 
 		// Enqueue resources needed at post/page level
-		if (preg_match("/\/wp-admin\/(post|post-new)\.php$/", $_SERVER['SCRIPT_NAME'])) {
-			$this->_enqueue_tinymce_resources();
+		if ($this->is_new_or_edit_post_screen()) {
+			wp_enqueue_script('nextgen_admin_js');
+			wp_enqueue_style('nextgen_admin_css');
+			wp_enqueue_script('frame_event_publisher');
+
+			M_Gallery_Display::enqueue_fontawesome();
+
+			wp_register_script(
+			    'Base64',
+                $router->get_static_url('photocrati-attach_to_post#base64.js'),
+                array(),
+                NGG_PLUGIN_VERSION
+            );
+
 			wp_enqueue_style(
-				'ngg_attach_to_post_dialog', $router->get_static_url('photocrati-attach_to_post#attach_to_post_dialog.css')
+				'ngg_attach_to_post_dialog',
+				$router->get_static_url('photocrati-attach_to_post#attach_to_post_dialog.css'),
+				array('gritter'),
+				NGG_SCRIPT_VERSION
 			);
+
+			wp_enqueue_script(
+				'ngg-igw',
+				$router->get_static_url('photocrati-attach_to_post#igw.js'),
+				array('jquery', 'Base64', 'gritter'),
+				NGG_PLUGIN_VERSION
+			);
+			wp_localize_script('ngg-igw', 'ngg_igw_i18n', array(
+				'nextgen_gallery'	=>	__('NextGEN Gallery', 'nggallery'),
+				'edit'				=>	__('Edit', 'nggallery'),
+				'remove'			=>	__('Delete', 'nggallery'),
+			));
+
 		}
 
 		elseif (isset($_REQUEST['attach_to_post']) OR
 		  (isset($_REQUEST['page']) && strpos($_REQUEST['page'], 'nggallery') !== FALSE)) {
-			wp_enqueue_script('iframely', $router->get_static_url('photocrati-attach_to_post#iframely.js'));
-			wp_enqueue_style('iframely',  $router->get_static_url('photocrati-attach_to_post#iframely.css'));
+			wp_enqueue_script(
+			    'iframely',
+                $router->get_static_url('photocrati-attach_to_post#iframely.js'),
+                array(),
+                NGG_SCRIPT_VERSION
+            );
+			wp_enqueue_style(
+			    'iframely',
+                $router->get_static_url('photocrati-attach_to_post#iframely.css'),
+                array(),
+                NGG_SCRIPT_VERSION
+            );
+			wp_enqueue_script('nextgen_admin_js');
 		}
 	}
 
+	function is_new_or_edit_post_screen()
+	{
+		return preg_match("/\/wp-admin\/(post|post-new)\.php$/", $_SERVER['SCRIPT_NAME']);
+	}
+
+	function can_use_tinymce()
+	{
+		$checks = array(
+			M_Security::is_allowed('NextGEN Attach Interface'),
+			M_Security::is_allowed('NextGEN Use TinyMCE'),
+			get_user_option('rich_editing') == 'true'
+		);
+		return !in_array(FALSE, $checks);
+	}
 
 	/**
 	 * Enqueues resources needed by the TinyMCE editor
 	 */
-	function _enqueue_tinymce_resources()
+	function enqueue_tinymce_resources()
 	{
-        wp_localize_script(
-			'media-editor',
-			'nextgen_gallery_attach_to_post_url',
-			C_NextGen_Settings::get_instance()->attach_to_post_url
-		);
+		if ($this->is_new_or_edit_post_screen()) {
+			$router = C_Router::get_instance();
 
-		// Registers our tinymce button and plugin for attaching galleries
-        $security   = $this->get_registry()->get_utility('I_Security_Manager');
-        $sec_actor  = $security->get_current_actor();
-        $checks = array(
-            $sec_actor->is_allowed('NextGEN Attach Interface'),
-            $sec_actor->is_allowed('NextGEN Use TinyMCE')
-        );
-        if (!in_array(FALSE, $checks)) {
-            if (get_user_option('rich_editing') == 'true') {
-                add_filter('mce_buttons', array(&$this, 'add_attach_to_post_button'));
-                add_filter('mce_external_plugins', array(&$this, 'add_attach_to_post_tinymce_plugin'));
-                add_filter('wp_mce_translation', array($this, 'add_attach_to_post_tinymce_i18n'));
-            }
-        }
+			add_editor_style('https://fonts.googleapis.com/css?family=Lato');
+			add_editor_style($router->get_static_url('photocrati-attach_to_post#ngg_attach_to_post_tinymce_plugin.css'));
+			wp_enqueue_script('photocrati_ajax');
+
+			wp_localize_script(
+				'media-editor',
+				'nextgen_gallery_attach_to_post_url',
+				C_NextGen_Settings::get_instance()->attach_to_post_url
+			);
+
+			wp_localize_script(
+				'photocrati_ajax',
+				'ngg_tinymce_plugin',
+				array(
+					'url' => add_query_arg(
+						'ver',
+						NGG_SCRIPT_VERSION,
+						$router->get_static_url('photocrati-attach_to_post#ngg_attach_to_post_tinymce_plugin.js')
+					),
+					'name' => $this->attach_to_post_tinymce_plugin,
+					'i18n' => array(
+						'button_label' => __('Add NextGEN Gallery', 'nextgen-gallery')
+					)
+				)
+			);
+		}
 	}
-
 
 	/**
 	 * Adds a TinyMCE button for the Attach To Post plugin
 	 * @param array $buttons
-	 * @returns array
+	 * @return array
 	 */
 	function add_attach_to_post_button($buttons)
 	{
-		array_push(
-            $buttons,
-            'separator',
-            $this->attach_to_post_tinymce_plugin
-        );
+		if ($this->can_use_tinymce()) {
+			array_push(
+				$buttons,
+				'separator',
+				$this->attach_to_post_tinymce_plugin
+			);
+		}
+
         return $buttons;
 	}
-
 
 	/**
 	 * Adds the Attach To Post TinyMCE plugin
@@ -276,18 +478,17 @@ class M_Attach_To_Post extends C_Base_Module
 	 */
 	function add_attach_to_post_tinymce_plugin($plugins)
 	{
-        global $wp_version;
-        $router = $this->get_registry()->get_utility('I_Router');
+		if ($this->can_use_tinymce()) {
+			$router = C_Router::get_instance();
+			$plugins[$this->attach_to_post_tinymce_plugin] = add_query_arg(
+				'ver',
+				NGG_SCRIPT_VERSION,
+				$router->get_static_url('photocrati-attach_to_post#ngg_attach_to_post_tinymce_plugin.js')
+			);
+		}
 
-        if ($wp_version >= 3.9)
-            $file = $router->get_static_url('photocrati-attach_to_post#ngg_attach_to_post_tinymce_plugin.js');
-        else
-            $file = $router->get_static_url('photocrati-attach_to_post#ngg_attach_to_post_tinymce_plugin_wp38_compat.js');
-
-		$plugins[$this->attach_to_post_tinymce_plugin] = $file;
 		return $plugins;
 	}
-
 
     /**
      * Adds the Attach To Post TinyMCE i18n strings
@@ -300,56 +501,13 @@ class M_Attach_To_Post extends C_Base_Module
         return $mce_translation;
     }
 
-
-	/**
-	 * Locates the ids of displayed galleries that have been
-	 * removed from the post, and flags then for cleanup (deletion)
-	 * @global array $displayed_galleries_to_cleanup
-	 * @param int $post_id
-	 */
-	function locate_stale_displayed_galleries($post_id)
-	{
-		global $displayed_galleries_to_cleanup;
-		$displayed_galleries_to_cleanup	= array();
-		$post							= get_post($post_id);
-		$gallery_preview_url			= C_NextGen_Settings::get_instance()->get('gallery_preview_url');
-		$preview_url = preg_quote($gallery_preview_url, '#');
-		if (preg_match_all("#{$preview_url}/id--(\d+)#", html_entity_decode($post->post_content), $matches, PREG_SET_ORDER)) {
-			foreach ($matches as $match) {
-				$preview_url = preg_quote($match[0], '/');
-				// The post was edited, and the displayed gallery placeholder was removed
-				if (isset($_REQUEST['post_content']) && (!preg_match("/{$preview_url}/", $_POST['post_content']))) {
-					$displayed_galleries_to_cleanup[] = intval($match[1]);
-				}
-				// The post was deleted
-				elseif (!isset($_REQUEST['action'])) {
-					$displayed_galleries_to_cleanup[] = intval($match[1]);
-				}
-			}
-		}
-	}
-
-	/**
-	 * Deletes any displayed galleries that are no longer associated with
-	 * a post/page
-	 * @global array $displayed_galleries_to_cleanup
-	 * @param int $post_id
-	 */
-	function cleanup_displayed_galleries($post_id)
-	{
-		global $displayed_galleries_to_cleanup;
-		$mapper = $this->get_registry()->get_utility('I_Displayed_Gallery_Mapper');
-		foreach ($displayed_galleries_to_cleanup as $id) $mapper->destroy($id);
-	}
-
-
 	/**
 	 * Notify frames that a new gallery has been created
 	 * @param int $gallery_id
 	 */
 	function new_gallery_event($gallery_id)
 	{
-        $gallery = $this->get_registry()->get_utility('I_Gallery_Mapper')->find($gallery_id);
+        $gallery = C_Gallery_Mapper::get_instance()->find($gallery_id);
 		if ($gallery) {
 			$this->_get_frame_event_publisher()->add_event(array(
 				'event'		=>	'new_gallery',
@@ -395,19 +553,63 @@ class M_Attach_To_Post extends C_Base_Module
         $this->_get_frame_event_publisher()->add_event($event);
 	}
 
+	/**
+	 * @return array
+	 */
     function get_type_list()
     {
         return array(
             'A_Attach_To_Post_Ajax' => 'adapter.attach_to_post_ajax.php',
             'C_Attach_To_Post_Installer' => 'class.attach_to_post_installer.php',
-            'A_Attach_To_Post_Routes' => 'adapter.attach_to_post_routes.php',
             'A_Gallery_Storage_Frame_Event' => 'adapter.gallery_storage_frame_event.php',
             'C_Attach_Controller' => 'class.attach_controller.php',
 			'C_Attach_To_Post_Proxy_Controller' => 'class.attach_to_post_proxy_controller.php',
-            'I_Attach_To_Post_Controller' => 'interface.attach_to_post_controller.php',
             'Mixin_Attach_To_Post_Display_Tab' => 'mixin.attach_to_post_display_tab.php'
         );
     }
+}
+
+class C_Attach_To_Post_Option_Handler
+{
+	function get_router()
+	{
+		return C_Router::get_instance();
+	}
+
+	function get($key, $default=NULL)
+	{
+		$retval = $default;
+
+		switch ($key) {
+			case 'attach_to_post_url':
+				$retval = admin_url('/?'.NGG_ATTACH_TO_POST_SLUG.'=1');
+				break;
+			case 'gallery_preview_url':
+				// TODO: This url will be used in 2.0.69
+				if (FALSE) $retval = admin_url('/?'.NGG_ATTACH_TO_POST_SLUG.'='.NGG_ATTACH_TO_POST_SLUG.'/preview');
+				else $retval = $this->get_router()->get_url('/'.NGG_ATTACH_TO_POST_SLUG.'/preview', FALSE);
+				break;
+			case 'attach_to_post_display_tab_js_url':
+				$retval = admin_url('/?'.NGG_ATTACH_TO_POST_SLUG.'=js');
+				break;
+		}
+
+		if (is_ssl() && strpos($retval, 'https') === FALSE) $retval = str_replace('http', 'https', $retval);
+
+		return $retval;
+	}
+}
+
+class C_Attach_To_Post_Installer
+{
+	function install()
+	{
+		// Delete cached values. Needed for 2.0.7 and less
+		$settings = C_NextGen_Settings::get_instance();
+		$settings->delete('attach_to_post_url');
+		$settings->delete('gallery_preview_url');
+		$settings->delete('attach_to_post_display_tab_js_url');
+	}
 }
 
 new M_Attach_To_Post();

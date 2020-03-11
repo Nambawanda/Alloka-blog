@@ -26,27 +26,30 @@ class nggMeta{
 
     /**
      * Parses the nggMeta data only if needed
-     * @param int $image path to a image
-     * @param bool $onlyEXIF parse only exif if needed
-     * @return
+     * @param object|int $image_or_id An image object or an image ID
+     * @param bool $onlyEXIF Parse only exif if needed
+     * @return bool
      */
-    function nggMeta($pic_id, $onlyEXIF = false) {
+    function __construct($image_or_id, $onlyEXIF = false)
+    {
+	    if (is_int($image_or_id)) {
+		    //get the path and other data about the image
+		    $this->image = C_Image_Mapper::get_instance()->find( $image_or_id);
+	    }
+	    else $this->image = $image_or_id;
 
-        //get the path and other data about the image
-        $this->image = nggdb::find_image( $pic_id );
+	    $imagePath = C_Gallery_Storage::get_instance()->get_image_abspath($this->image);
 
-        $this->image = apply_filters( 'ngg_find_image_meta', $this->image  );
-
-        if ( !file_exists( $this->image->imagePath ) )
+        if ( !file_exists($imagePath ) )
             return false;
 
-        $this->size = @getimagesize ( $this->image->imagePath , $metadata );
+        $this->size = @getimagesize ( $imagePath , $metadata );
 
         if ($this->size && is_array($metadata)) {
 
             // get exif - data
             if ( is_callable('exif_read_data'))
-                $this->exif_data = @exif_read_data($this->image->imagePath , 0, true );
+                $this->exif_data = @exif_read_data($imagePath , NULL, TRUE);
 
             // stop here if we didn't need other meta data
             if ($onlyEXIF)
@@ -58,7 +61,7 @@ class nggMeta{
 
             // get the xmp data in a XML format
             if ( is_callable('xml_parser_create'))
-                $this->xmp_data = $this->extract_XMP($this->image->imagePath );
+                $this->xmp_data = $this->extract_XMP($imagePath );
 
             return true;
         }
@@ -77,11 +80,9 @@ class nggMeta{
 
         $meta = $this->image->meta_data;
 
-        if (!isset($meta['saved'])) $meta['saved'] = FALSE;
-
-		//check if we already import the meta data to the database
-		if (!is_array($meta) || ($meta['saved'] != true))
-			return false;
+        // Check if we already import the meta data to the database
+        if (!is_array($meta) || !isset($meta['saved']) || ($meta['saved'] !== TRUE))
+            return false;
 
         // return one element if requested
         if ($object)
@@ -98,7 +99,7 @@ class nggMeta{
 
         // on request sanitize the output
         if ( $this->sanitize == true )
-            array_walk( $meta , create_function('&$value', '$value = esc_html($value);'));
+            array_walk( $meta , 'esc_html');
 
         return $meta;
     }
@@ -107,7 +108,7 @@ class nggMeta{
      * nggMeta::get_EXIF()
      * See also http://trac.wordpress.org/changeset/6313
      *
-     * @return structured EXIF data
+     * @return bool|array Structured EXIF data
      */
     function get_EXIF($object = false) {
 
@@ -118,19 +119,19 @@ class nggMeta{
 
             $meta= array();
 
-            if ( isset($this->exif_data['EXIF']) ) {
-                $exif = $this->exif_data['EXIF'];
+	        $exif = isset($this->exif_data['EXIF']) ? $this->exif_data['EXIF'] : array();
+	        if (count($exif)) {
 
                 if (!empty($exif['FNumber']))
                     $meta['aperture'] = 'F ' . round( $this->exif_frac2dec( $exif['FNumber'] ), 2 );
                 if (!empty($exif['Model']))
                     $meta['camera'] = trim( $exif['Model'] );
                 if (!empty($exif['DateTimeDigitized']))
-                    $meta['created_timestamp'] = date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $this->exif_date2ts($exif['DateTimeDigitized']));
+                    $meta['created_timestamp'] = $this->exif_date2ts($exif['DateTimeDigitized']);
                 else if (!empty($exif['DateTimeOriginal']))
-                    $meta['created_timestamp'] = date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $this->exif_date2ts($exif['DateTimeOriginal']));
+                    $meta['created_timestamp'] = $this->exif_date2ts($exif['DateTimeOriginal']);
 				else if (!empty($exif['FileDateTime']))
-					$meta['created_timestamp'] = date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $this->exif_date2ts($exif['FileDateTime']));
+					$meta['created_timestamp'] = $this->exif_date2ts($exif['FileDateTime']);
                 if (!empty($exif['FocalLength']))
                     $meta['focal_length'] = $this->exif_frac2dec( $exif['FocalLength'] ) . __(' mm','nggallery');
                 if (!empty($exif['ISOSpeedRatings']))
@@ -154,7 +155,7 @@ class nggMeta{
                 if (!empty($exif['Make']))
                     $meta['make'] = $exif['Make'];
                 if (!empty($exif['ImageDescription']))
-                    $meta['title'] = utf8_encode($exif['ImageDescription']);
+                    $meta['title'] = $exif['ImageDescription'];
                 if (!empty($exif['Orientation']))
                     $meta['Orientation'] = $exif['Orientation'];
             }
@@ -164,15 +165,15 @@ class nggMeta{
                 $exif = $this->exif_data['WINXP'];
 
                 if (!empty($exif['Title']) && empty($meta['title']))
-                    $meta['title'] = utf8_encode($exif['Title']);
+                    $meta['title'] = $this->utf8_encode($exif['Title']);
                 if (!empty($exif['Author']))
-                    $meta['author'] = utf8_encode($exif['Author']);
+                    $meta['author'] = $this->utf8_encode($exif['Author']);
                 if (!empty($exif['Keywords']))
-                    $meta['tags'] = utf8_encode($exif['Keywords']);
+                    $meta['keywords'] = $this->utf8_encode($exif['Keywords']);
                 if (!empty($exif['Subject']))
-                    $meta['subject'] = utf8_encode($exif['Subject']);
+                    $meta['subject'] = $this->utf8_encode($exif['Subject']);
                 if (!empty($exif['Comments']))
-                    $meta['caption'] = utf8_encode($exif['Comments']);
+                    $meta['caption'] = $this->utf8_encode($exif['Comments']);
             }
 
             $this->exif_array = $meta;
@@ -186,7 +187,7 @@ class nggMeta{
 
         // on request sanitize the output
         if ( $this->sanitize == true )
-            array_walk( $this->exif_array , create_function('&$value', '$value = esc_html($value);'));
+            array_walk( $this->exif_array , 'esc_html');
 
         return $this->exif_array;
 
@@ -201,27 +202,32 @@ class nggMeta{
     }
 
     // convert the exif date format to a unix timestamp
-    function exif_date2ts($str) {
-        // seriously, who formats a date like 'YYYY:MM:DD hh:mm:ss'?
-        @list( $date, $time ) = explode( ' ', trim($str) );
-        @list( $y, $m, $d ) = explode( ':', $date );
+	function exif_date2ts($str)
+	{
+		$retval = is_numeric($str) ? $str : @strtotime($str);
+		if (!$retval && $str) {
+			@list( $date, $time ) = explode( ' ', trim($str) );
+			@list( $y, $m, $d ) = explode( ':', $date );
+			$retval =  strtotime( "{$y}-{$m}-{$d} {$time}" );
 
-        return strtotime( "{$y}-{$m}-{$d} {$time}" );
-    }
+		}
+		return $retval;
+	}
 
     /**
      * nggMeta::readIPTC() - IPTC Data Information for EXIF Display
      *
-     * @param mixed $output_tag
-     * @return IPTC-tags
+     * @param mixed $object (optional)
+     * @return null|bool|array
      */
-    function get_IPTC($object = false) {
+    function get_IPTC($object = false)
+    {
 
         if (!$this->iptc_data)
             return false;
 
-        if (!is_array($this->iptc_array)){
-
+        if (!is_array($this->iptc_array))
+        {
             // --------- Set up Array Functions --------- //
             $iptcTags = array (
                 "2#005" => 'title',
@@ -248,9 +254,8 @@ class nggMeta{
 
             $meta = array();
             foreach ($iptcTags as $key => $value) {
-                if (isset ( $this->iptc_data[$key] ) )
-                    $meta[$value] = trim(utf8_encode(implode(", ", $this->iptc_data[$key])));
-
+                if (isset($this->iptc_data[$key]))
+                    $meta[$value] = trim($this->utf8_encode(implode(", ", $this->iptc_data[$key])));
             }
             $this->iptc_array = $meta;
         }
@@ -261,7 +266,7 @@ class nggMeta{
 
         // on request sanitize the output
         if ( $this->sanitize == true )
-            array_walk( $this->iptc_array , create_function('&$value', '$value = esc_html($value);'));
+            array_walk( $this->iptc_array , 'esc_html');
 
         return $this->iptc_array;
     }
@@ -272,7 +277,7 @@ class nggMeta{
      * code by Pekka Saarinen http://photography-on-the.net
      *
      * @param mixed $filename
-     * @return XML data
+     * @return bool|string XML data
      */
     function extract_XMP( $filename ) {
 
@@ -300,7 +305,7 @@ class nggMeta{
      *
      * @package Taken from http://php.net/manual/en/function.xml-parse-into-struct.php
      * @author Alf Marius Foss Olsen & Alex Rabe
-     * @return XML Array or object
+     * @return bool|array|object XML Array or object
      *
      */
     function get_XMP($object = false) {
@@ -387,7 +392,7 @@ class nggMeta{
                     switch ($key) {
                         case 'xap:CreateDate':
                         case 'xap:ModifyDate':
-                            $this->xmp_array[$value] = date_i18n(get_option('date_format').' '.get_option('time_format'), strtotime($xmlarray[$key]));
+                            $this->xmp_array[$value] = $this->exif_date2ts($xmlarray[$key]);
                             break;
                         default :
                             $this->xmp_array[$value] = $xmlarray[$key];
@@ -403,7 +408,7 @@ class nggMeta{
 
         // on request sanitize the output
         if ( $this->sanitize == true )
-            array_walk( $this->xmp_array , create_function('&$value', '$value = esc_html($value);'));
+            array_walk( $this->xmp_array , 'esc_html');
 
         return $this->xmp_array;
     }
@@ -416,6 +421,7 @@ class nggMeta{
         } else {
             $array = $value;
         }
+        return $array;
     }
 
     /**
@@ -424,27 +430,30 @@ class nggMeta{
      * @param string $object
      * @return mixed $value
      */
-    function get_META($object = false) {
+	function get_META($object = false) {
 
-        // defined order first look into database, then XMP, IPTC and EXIF.
-        if ($value = $this->get_saved_meta($object))
-            return $value;
-        if ($value = $this->get_XMP($object))
-            return $value;
-        if ($value = $this->get_IPTC($object))
-            return $value;
-        if ($value = $this->get_EXIF($object))
-            return $value;
+		// defined order first look into database, then XMP, IPTC and EXIF.
+		if ($value = $this->get_saved_meta($object))
+			return $value;
+		if ($value = $this->get_XMP($object))
+			return $value;
+		if ($object == 'created_timestamp' && ($d = $this->get_IPTC('created_date')) && ($t = $this->get_IPTC('created_time'))) {
+			return $this->exif_date2ts($d . ' '.$t);
+		}
+		if ($value = $this->get_IPTC($object))
+			return $value;
+		if ($value = $this->get_EXIF($object))
+			return $value;
 
-        // nothing found ?
-        return false;
-    }
+		// nothing found ?
+		return false;
+	}
 
     /**
      * nggMeta::i8n_name() -  localize the tag name
      *
      * @param mixed $key
-     * @return translated $key
+     * @return string Translated $key
      */
     function i18n_name($key) {
 
@@ -496,51 +505,33 @@ class nggMeta{
 
     /**
      * Return the Timestamp from the image , if possible it's read from exif data
-     * @return int
+     * @return string
      */
-    function get_date_time() {
+	function get_date_time() {
 
 		$date = time();
 
-		// Try XMP first
-		if (isset($this->xmp_array['created_timestamp'])) {
-			$date = @strtotime($this->xmp_array['created_timestamp']);
-		}
-
-		// Then EXIF
-		else if (isset($this->exif_array['created_timestamp'])) {
-			$date = @strtotime($this->exif_array['created_timestamp']);
-		}
-
-		// Then IPTC
-		else if (isset($this->iptc_array['created_date'])) {
-			$date = $this->iptc_array['created_date'];
-			if (isset($this->iptc_array['created_time'])) {
-				$date .= " {$this->iptc_array['created_time']}";
-			}
-			$date = @strtotime($date);
-		}
-
-		// If all else fails, use the file creation time
-		else if ($this->image->imagePath) {
-			$date = @filectime($this->image->imagePath);
+		$date = $this->exif_date2ts($this->get_META('created_timestamp'));
+		if (!$date) {
+			$image_path = C_Gallery_Storage::get_instance()->get_backup_abspath($this->image);
+			$date = @filectime($image_path);
 		}
 
 		// Failback
 		if (!$date) $date = time();
 
-        // Return the MySQL format
-        $date_time = date( 'Y-m-d H:i:s', $date);
+		// Return the MySQL format
+		$date_time = date( 'Y-m-d H:i:s', $date);
 
-        return $date_time;
-    }
+		return $date_time;
+	}
 
     /**
      * This function return the most common metadata, via a filter we can add more
      * Reason : GD manipulation removes that options
      *
      * @since V1.4.0
-     * @return void
+     * @return bool|array
      */
     function get_common_meta() {
         global $wpdb;
@@ -584,5 +575,33 @@ class nggMeta{
      */
     function sanitize () {
         $this->sanitize = true;
+    }
+
+    /**
+     * Wrapper to utf8_encode() that avoids double encoding
+     *
+     * Regex adapted from http://www.w3.org/International/questions/qa-forms-utf-8.en.php
+     * to determine if the given string is already UTF-8. mb_detect_encoding() is not
+     * always available and is limited in accuracy
+     *
+     * @param string $str
+     * @return string
+     */
+    function utf8_encode($str)
+    {
+        $is_utf8 = preg_match(
+            '%^(?:
+              [\x09\x0A\x0D\x20-\x7E]            # ASCII
+            | [\xC2-\xDF][\x80-\xBF]             # non-overlong 2-byte
+            |  \xE0[\xA0-\xBF][\x80-\xBF]        # excluding overlongs
+            | [\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}  # straight 3-byte
+            |  \xED[\x80-\x9F][\x80-\xBF]        # excluding surrogates
+            |  \xF0[\x90-\xBF][\x80-\xBF]{2}     # planes 1-3
+            | [\xF1-\xF3][\x80-\xBF]{3}          # planes 4-15
+            |  \xF4[\x80-\x8F][\x80-\xBF]{2}     # plane 16
+            )*$%xs', $str);
+        if (!$is_utf8)
+            utf8_encode($str);
+        return $str;
     }
 }

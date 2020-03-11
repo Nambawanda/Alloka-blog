@@ -3,14 +3,16 @@
     <select id="gallery_id">
         <option value="0"><?php _e('Create a new gallery', 'nggallery'); ?></option>
         <?php foreach ($galleries as $gallery): ?>
-            <option value="<?php echo esc_attr($gallery->{$gallery->id_field}) ?>"><?php echo esc_attr($gallery->title) ?></option>
+            <option value="<?php echo esc_attr($gallery->{$gallery->id_field}) ?>">
+                <?php print esc_attr(apply_filters('ngg_gallery_title_select_field', $gallery->title, $gallery, FALSE)); ?>
+            </option>
         <?php endforeach ?>
     </select>
-    <input type="text" id="gallery_name" name="gallery_name"/>
+    <input type="text" id="gallery_name" name="gallery_name" placeholder="<?php _e('Gallery title', 'nggallery'); ?>"/>
 </div>
 
 <div id="uploader">
-    <p><?php _e("You browser doesn't have Flash, Silverlight, HTML5, or HTML4 support.", 'nggallery'); ?></p>
+    <p><?php _e("Your browser doesn't have Silverlight, HTML5, or HTML4 support.", 'nggallery'); ?></p>
 </div>
 <script type="text/javascript">
     // Listen for events emitted in other frames
@@ -43,8 +45,9 @@
 
                 // Sets the plupload url with necessary parameters in the QS
                 window.set_plupload_url = function(gallery_id, gallery_name) {
-                    var qs = "?action=upload_image&gallery_id="+urlencode(gallery_id);
+                    var qs = "&action=upload_image&gallery_id="+urlencode(gallery_id);
                     qs += "&gallery_name="+urlencode(gallery_name);
+                    qs += "&nonce="+urlencode("<?php echo $nonce; ?>");
                     return photocrati_ajax.url + qs;
                 };
 
@@ -69,6 +72,22 @@
                     var $gallery_name = $('#gallery_name').show();
                     var $gallery_selection = $('#gallery_selection').detach();
                     window.uploaded_image_ids = [];
+                    window.uploaded_image_errors = [];
+
+                    ngg_plupload.addFileFilter('xss_protection', function(enabled, file, cb){
+                        var retval = true;
+                        if (enabled) {
+                           if (file.name.match(/\<|\>/)) {
+                               retval = false;
+                               this.trigger("Error", {
+                                  code: ngg_plupload.SECURITY_ERROR,
+                                  message: ngg_plupload.translate('XSS attempt detected'),
+                                  file: file
+                               });
+                           }
+                        }
+                        cb(retval);
+                    });
 
                     // Override some final plupload options
                     plupload_options.url = photocrati_ajax.url;
@@ -96,7 +115,15 @@
                             });
 
                             // Change the text for the dragdrop
-                            $('.plupload_droptext').html("<?php _e('Drag image and ZIP files here or click <strong>Add Files</strong>', 'nggallery'); ?>");
+                            <?php
+                            $settings = C_NextGen_Settings::get_instance();
+                            $display_zips = (!is_multisite() || (is_multisite() && $settings->get('wpmuZipUpload')));
+                            if ($display_zips)
+                                $message = __('Drag image and ZIP files here or click <strong>Add Files</strong>', 'nggallery');
+                            else
+                                $message = __('Drag image files here or click <strong>Add Files</strong>', 'nggallery');
+                            ?>
+                            $('.plupload_droptext').html("<?php print $message; ?>");
 
                             // Move the buttons
                             var buttons = $('.plupload_buttons').detach();
@@ -146,17 +173,42 @@
 
                             // Determine appropriate message to display
                             var upload_count = window.uploaded_image_ids.length;
-                            var msg = "<?php _e('%s images were uploaded successfully', 'nggallery'); ?>";
-                            msg = msg.replace('%s', upload_count);
-                            if (upload_count == 1) {
-                                msg = "<?php _e('1 image was uploaded successfully', 'nggallery'); ?>";
+                            var errors = window.uploaded_image_errors;
+                            var msg = '';
+                            var gallery_url = '<?php echo admin_url("/admin.php?page=nggallery-manage-gallery&mode=edit&gid=")?>' + $gallery_id.val();
+
+                            if (upload_count == 0) {
+                                msg = NggUploadImages_i18n.no_images_uploaded;
                             }
-                            else if (upload_count == 0) {
-                                msg = "<?php _e('0 images were uploaded', 'nggallery'); ?>";
+                            else {
+
+
+                                msg = upload_count == 1 ? NggUploadImages_i18n.one_image_uploaded : NggUploadImages_i18n.x_images_uploaded;
+                                msg = msg.replace('{count}', upload_count);
+                                
+                                if (errors.length > 0) {
+                                	msg = msg + '<br/>' + NggUploadImages_i18n.image_errors;
+                                	
+                                	for (var i = 0; i < errors.length; i++) {
+                                		msg = msg + '<br/>' + errors[i];
+                                	}
+                                	
+                                	msg = msg + '<br/>';
+                                }
+
+                                // If we're outside of the IGW, we will then display a link to manage the gallery
+                                if ($('#iframely').length == 0) {
+                                    var $link = $('<a/>').attr({
+                                        href: gallery_url,
+                                        target: '_blank'
+                                    });
+                                    $link.text(NggUploadImages_i18n.manage_gallery.replace('{name}', $gallery_name.val()));
+                                    msg = msg + ' ' + $link[0].outerHTML;
+                                }
                             }
 
                             // Display message/notification
-                            if (up.state == plupload.STOPPED) {
+                            if (up.state == ngg_plupload.STOPPED) {
 								if (typeof(up.error_msg) != 'undefined') {
 									$.gritter.add({
 										title: up.error_msg,
@@ -166,7 +218,7 @@
 								}
 								else {
 									$.gritter.add({
-										title: '<?php _e("Upload complete", 'nggallery'); ?>',
+										title: '<?php _e("Upload complete. Great job!", 'nggallery'); ?>',
 										text: msg,
 										sticky: true
 									});
@@ -184,10 +236,11 @@
                             if (typeof(response) != 'object') {
                                 try {
                                     response = JSON.parse(info.response);
+                                    if (!response) throw new Error();
                                 }
                                 catch (ex) {
                                     up.trigger('Error', {
-                                        code: plupload.IO_ERROR,
+                                        code: ngg_plupload.IO_ERROR,
                                         msg: "<?php _e("An unexpected error occured. This is most likely due to a server misconfiguration. Check your PHP error log or ask your hosting provider for assistance.", 'nggallery'); ?>",
                                         details: response.replace(/<.*>/, '').trim(),
                                         file: file
@@ -197,7 +250,7 @@
                             }
 							if(typeof(response.error) != 'undefined') {
 								up.trigger('Error', {
-									code: plupload.IO_ERROR,
+									code: ngg_plupload.IO_ERROR,
 									msg: response.error,
 									details: response,
 									file: file
@@ -206,13 +259,21 @@
 							else {
 								window.uploaded_image_ids = window.uploaded_image_ids.concat(response.image_ids);
 								up.settings.url = window.set_plupload_url(response.gallery_id, $gallery_name.val());
-
+								
+								if (response.image_errors) {
+									for (var i = 0; i < response.image_errors.length; i++) {
+										var errMsg = response.image_errors[i].error;
+										if (window.uploaded_image_errors.indexOf(errMsg) == -1)
+											window.uploaded_image_errors.push(errMsg);
+									}
+								}
+								
 								// If we created a new gallery, ensure it's now in the drop-down list, and select it
 								if ($gallery_id.find('option[value="'+response.gallery_id+'"]').length == 0) {
 									var option = $('<option/>').attr('value', response.gallery_id).html(response.gallery_name);
 									$gallery_id.append(option);
 									$gallery_id.val(response.gallery_id);
-									option.attr('selected', 'selected');
+									option.prop('selected', true);
 								}
 
 								// our Frame-Event-Publisher hooks onto the jQuery ajaxComplete action which plupload
@@ -244,6 +305,10 @@
                     uploader.refresh();
                     window.Frame_Event_Publisher.broadcast();
 
+										var evtJq = $;
+										if (window.top.jQuery)
+											evtJq = window.top.jQuery;
+										evtJq(window.top.document).find('body').trigger('nextgen_event', [ 'plupload_init' ]);
                 };
 
                 window.init_plupload();

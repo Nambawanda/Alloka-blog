@@ -13,3 +13,4 @@ node_modules/
 *.sqlite
 .idea
 *.iml
+wp-config.php

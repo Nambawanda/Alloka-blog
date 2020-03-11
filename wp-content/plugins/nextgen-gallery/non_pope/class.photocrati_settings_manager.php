@@ -1,6 +1,7 @@
 <?php
 
-if (!class_exists('C_Photocrati_Settings_Manager_Base')) {
+if (!class_exists('C_Photocrati_Settings_Manager_Base'))
+{
 	/**
 	 * Provides a base abstraction for a Settings Manager
 	 * Class C_Settings_Manager_Base
@@ -56,23 +57,25 @@ if (!class_exists('C_Photocrati_Settings_Manager_Base')) {
 
 		/**
 		 * Gets the value of a particular setting
+         *
 		 * @param $key
 		 * @param null $default
-		 * @return null
+		 * @return mixed
 		 */
-		function get($key, $default=NULL)
+		function get($key, $default = NULL)
 		{
 			$retval = $default;
 
-			if (isset($this->_options[$key]))
-				$retval =  $this->_options[$key];
-			elseif (($handler = $this->_get_option_handler($key, 'get'))) {
-				$retval = $handler->get($key, $default);
-			}
+            if (($handler = $this->_get_option_handler($key, 'get'))) {
+                $retval = $handler->get($key, $default);
+            }
+            else if (isset($this->_options[$key])) {
+                $retval =  $this->_options[$key];
+            }
 
-			// In case a stdObject has been passed in as a value, we
-			// want to only return scalar values or arrays
-			if (is_object($retval)) $retval = (array) $retval;
+			// In case a stdObject has been passed in as a value, we want to only return scalar values or arrays
+			if (is_object($retval))
+			    $retval = (array) $retval;
 
 			return $retval;
 		}
@@ -224,14 +227,18 @@ if (!class_exists('C_Photocrati_Settings_Manager_Base')) {
 if (!class_exists('C_Photocrati_Global_Settings_Manager')) {
 	class C_Photocrati_Global_Settings_Manager extends C_Photocrati_Settings_Manager_Base
 	{
+        static $_instance = NULL;
+
+        /**
+         * @return C_Photocrati_Global_Settings_Manager
+         */
 		public static function get_instance()
 		{
-			static $_instance = NULL;
-			if (is_null($_instance)) {
-				$klass = get_class();
-				$_instance = new $klass();
-			}
-			return $_instance;
+            if (is_null(self::$_instance)) {
+                $klass = get_class();
+                self::$_instance = new $klass();
+            }
+            return self::$_instance;
 		}
 
 		function save()
@@ -242,8 +249,10 @@ if (!class_exists('C_Photocrati_Global_Settings_Manager')) {
 		function load()
 		{
 			$this->_options = get_site_option(self::$option_name, $this->to_array());
-			if (!$this->_options) $this->_options = array();
-			else if (is_string($this->_options)) $this->_options = unserialize($this->_options);
+			if (!$this->_options)
+			    $this->_options = array();
+			else if (is_string($this->_options))
+			    $this->_options = C_NextGen_Serializable::unserialize($this->_options);
 		}
 
 		function destroy()
@@ -254,18 +263,23 @@ if (!class_exists('C_Photocrati_Global_Settings_Manager')) {
 }
 
 
-if (!class_exists('C_Photocrati_Settings_Manager')) {
+if (!class_exists('C_Photocrati_Settings_Manager'))
+{
 	class C_Photocrati_Settings_Manager extends C_Photocrati_Settings_Manager_Base
 	{
-		public static function get_instance()
-		{
-			static $_instance = NULL;
-			if (is_null($_instance)) {
-				$klass = get_class();
-				$_instance = new $klass();
-			}
-			return $_instance;
-		}
+        static $_instance = NULL;
+
+        /**
+         * @return C_Photocrati_Settings_Manager
+         */
+        public static function get_instance()
+        {
+            if (is_null(self::$_instance)) {
+                $klass = get_class();
+                self::$_instance = new $klass();
+            }
+            return self::$_instance;
+        }
 
 		function get($key, $default=NULL)
 		{
@@ -286,15 +300,12 @@ if (!class_exists('C_Photocrati_Settings_Manager')) {
 		{
 			$this->_options = get_option(self::$option_name, array());
 			if (!$this->_options) $this->_options = array();
-			else if (is_string($this->_options)) $this->_options = unserialize($this->_options);
+			else if (is_string($this->_options)) $this->_options = C_NextGen_Serializable::unserialize($this->_options);
 		}
 
 		function destroy()
 		{
 			delete_option(self::$option_name);
 		}
-
-
 	}
 }
-
