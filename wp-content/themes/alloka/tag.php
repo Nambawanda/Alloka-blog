@@ -1,151 +1,61 @@
 <?php  /* Template Name: Блог */
- require('./wp-blog-header.php');
- require_once('header.php');
- ?>
-
-</head>
+require('./wp-blog-header.php');
+require_once('header_v2.php');
+?>
 <body>
-<div class="b_wraper">
-<div class="blog_topbg"></div>
+<?php include_once('googletag.php'); //todo: проверить гугл тэг ?>
+<!-- Page -->
+<div class="page" id="root">
+	<div class="page__layout">
+		<form action="#" class="page__search search">
+			<label class="search__field">
+				<input type="text" class="search__input" placeholder="Искать по статьям" required>
+				<button class="search__button"></button>
+			</label>
+		</form>
 
-<?php require('feedcall.php'); ?>	
-
-	<div class="fcontainer"></div>
-	<div class="b_block1_blog">
-	
-		<div class="b_band b_band1">
-			<div class="header1">
-				<a href="/" class="logo"><img alt="" src="<?php echo bloginfo('template_url'); ?>/images/logo_blog.png" /></a>
-				<ul class="b_toplink_blog">
-					<li><a href="/">Вход в личный кабинет</a></li>
-				</ul>
-				<ul class="select_city_blog">
-					<li><p class="regselect_blog ph1" style="border:none;">Москва</p></li>
-					<li><p class="regselect_blog ph2">Н.Новгород</p></li>
-					<li><p class="regselect_blog ph3">С.-Петербург</p></li>
-				</ul>
-				<p class="tphone_blog">
-					<span style="display:block;">(499) 400-24-91</span>
-					<span>(831) 230-30-35</span>
-					<span>(812) 600-16-22</span>
-				</p>
-				<p class="fcall fcall_blogs">Заказать обратный звонок</p>
-			
-			
-				<ul class="b_menu b_menu_blog">
-					<li><a href="/o-kompanii/">О компании</a></li>
-					<li><a href="/">Отзывы клиентов</a></li>
-					<li><a href="/">Блог</a></li>
-				</ul>	
-			</div>
-			
-			
-			
-			<div class="content1 content1_in">
-				<a href="#" class="icons icalls_blog"><span>Alloka звонки</span></a>
-				<a href="#" class="icons ianalitics_blog "><span>Alloka аналитика</span></a>
-			</div>
-		</div>
-	</div>
-	
-	<div class="b_block_blog2">
-		<div class="b_band b_blog_band2">
-			<h1 class="title_center">Здесь собраны все мысли<br /><span>компании Alloka</span></h1>
-			
-			<div class="b_blog_top">
-			
-				<div class="b_blog_top_right">
-					<div class="blog_cats">
-						<div class="blog_cats_top"></div>
-						<div class="blog_cats_main">
-							<p class="blog_cats_title"><b>Мы пишем на темы:</b></p>
-							<?php wp_tag_cloud('smallest=8&largest=20&number=35'); ?>
-						</div>
-						<div class="blog_cats_bot"></div>
-					</div>
-					
-					<div class="b_golosovanie">
-					
-					</div>
+		<h1 class="page__title title">Наши мысли</h1>
+		<?$tags = get_tags(array('orderby' => 'count', 'order'   => 'DESC', 'number' => 10));?>
+		<ul class="page__taglist taglist">
+			<?
+			foreach ( $tags as $tag ) {
+				$tag_link = get_tag_link($tag->term_id);
+				echo "<li class=\"taglist__item\"><a href='{$tag_link}' title='{$tag->name} Tag' class='tag".(($tag->slug == $wp_query->query['tag'])? ' tag_active' : '')."'># {$tag->name}</a></li>";
+				if($tag->slug == $wp_query->query['tag']){
+					$current_tag = $tag->name;
+				}
+			}
+			?>
+		</ul>
+		<div class="articlesByTag__newsTitle">Все новости по тегу “<?=$current_tag?>”</div>
+			<div class="news">
+				<div class="news__list">
+					<?
+					include('includes/posts_list.php');
+					?>
 				</div>
-				
-			
-				<div class="b_blog_top_left">
-					<?php set_post_thumbnail_size( 265, 125 ); ?> <!--размер миниатюры -->
-					<h1><?php single_tag_title(); ?></h1>
-					<br /><br />
-					<?php $postcount=1; if(have_posts()) : while(have_posts()) : the_post(); ?>
-					<?php if ($postcount==1) : $postcount++;?>
-					<div class="news_itm_long_cont">
-						<div class="news_itm_long">
-							<?php /* если есть миниатюра */
-							if ( has_post_thumbnail() ) : ?>
-								<div class="news_long_img">
-									<div class="news_img"><?php the_post_thumbnail(); ?></div>
-									<p><a href="<?php the_permalink(); ?>" class="news_title"><?php the_title(); ?></a></p>
-									<p class="news_date"><?php the_time('m.d.Y'); ?></p>
-								</div>
-								<div class="news_prev">
-									<?php echo content(35); ?> <a href="<?php the_permalink(); ?>">читать полностью</a>
-									<br /><?php edit_post_link('редактировать', '', ''); ?>
-								</div>
-							<?php else : ?>
-									<p><a href="<?php the_permalink(); ?>" class="news_title"><?php the_title(); ?></a></p>
-									<p class="news_date"><?php the_time('m.d.Y'); ?></p>
-									<div class="news_prev">
-										<?php echo content(35); ?> <a href="<?php the_permalink(); ?>">читать полностью</a>
-										<br /><?php edit_post_link('редактировать', '', ''); ?>
-									</div>
-
-							<?php endif; ?>
-						</div>
-					</div>
-					<?php else: $postcount++;?>
-					<div class="news_itm_cont">
-						<?php /* если есть миниатюра */
-							if ( has_post_thumbnail() ) : ?>
-								<div class="top_news_itm">
-									<div class="news_img"><?php the_post_thumbnail(); ?></div>
-									<p><a href="<?php the_permalink(); ?>" class="news_title"><?php the_title(); ?></a></p>
-									<p class="news_date"><?php the_time('m.d.Y'); ?></p>
-								</div>
-							<?php else : ?>
-								<div class="top_news_itm">
-									<p><a href="<?php the_permalink(); ?>" class="news_title"><?php the_title(); ?></a></p>
-									<p class="news_date"><?php the_time('m.d.Y'); ?></p>
-									<div class="news_prev">
-										<?php echo content(15); ?>
-										<br /><?php edit_post_link('редактировать', '', ''); ?>
-									</div>
-								</div>
-							<?php endif; ?>
-							
-						
-					</div>
-					<?php if ($postcount==6) $postcount=1; ?>
-					<?php endif; ?>	
-					
-					
-					
-				<?php endwhile; ?>
-				<?php else : ?>	
-					<div>
-						К сожалению, по вашему запросу ничего не найдено.
-					</div>
-				<?php endif; ?>
+				<div class="news__footer">
+					<a href="#" class="news__showMore button button_secondary" data-tag="<?=$wp_query->query['tag']?>" data-page="0" data-pages="<?=$pages_count?>">Показать еще</a>
 				</div>
 			</div>
 		</div>
+		</div>
 	</div>
-	
-
-<div class="b_clear"></div>
-
-<?php require('brif.php'); ?>
-</div> 
-
+</div>
+<!--/Page -->
+<style>
+	.to_hide{
+		display: none;
+	}
+	.to_hide.show{display: inline-block}
+	.articleHeader.show_tags .to_hide{
+		display: block;
+	}
+	.show_all_tags{display: none}
+	.show_all_tags.active{display: inline-block}
+</style>
 <!--wraper end-->
-<?php require('footer.php'); ?>
+<?php  require('footerv2.php'); ?>
 
 </body>
 </html>

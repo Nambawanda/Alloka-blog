@@ -224,7 +224,7 @@ a {
 	border-radius: 4px;
 	padding: 5px 10px;
 	line-height: 1;
-	white-space: nowrap;
+	/*white-space: nowrap;*/
 	text-overflow: ellipsis;
 	font-size: 14px;
 	color: rgba(0, 0, 0, .9);
