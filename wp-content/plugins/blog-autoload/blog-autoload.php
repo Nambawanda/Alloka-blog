@@ -38,7 +38,6 @@ add_action('wp_head', 'js_test_plugin_front_variables');
  */
 function get_posts_callback()
 {
-	$params = $_REQUEST; // Тут передаются параметры
 	$first_page_count = ($_REQUEST['tag'])? 6 : 7;
 	$params = array('numberposts' => 12, 'category' => 3, 'offset' => ($_REQUEST['page'] * 12) + $first_page_count);
 	if($_REQUEST['tag']){
@@ -62,3 +61,23 @@ function get_posts_callback()
 
 add_action('wp_ajax_get_posts', 'get_posts_callback'); // Для авторизованных пользователей
 add_action('wp_ajax_nopriv_get_posts', 'get_posts_callback'); // Для не авторизованных
+
+function send_mail_callback(){
+	$email = $_REQUEST['email'];
+	$subject = "Новая подписка на новости";
+	$message = "<b>$email</b> только что подписался(ась) на новостную рассылку, с этим надо что-то сделать!";
+	$headers = 'From: blog@alloka.ru' . "\r\n";
+	$headers .= 'X-Mailer: PHP/' . phpversion(). "\r\n";
+	$headers .= 'Content-type: text/html; charset=UTF-8' . "\r\n";
+	$headers .= 'MIME-Version: 1.0' . "\r\n";
+	if (mail( 'support@alloka.ru', $subject, $message, $headers)){
+		wp_send_json_success(json_encode(array('status' => 'ok')));
+		wp_die();
+	}else{
+		wp_send_json_success(json_encode(array('status' => 'fail')));
+		wp_die();
+	}
+}
+
+add_action('wp_ajax_send_mail', 'send_mail_callback'); // Для авторизованных пользователей
+add_action('wp_ajax_nopriv_send_mail', 'send_mail_callback'); // Для не авторизованных

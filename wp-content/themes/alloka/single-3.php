@@ -1,129 +1,145 @@
 <?php  /* Template Name: Блог */
  require('./wp-blog-header.php');
- require_once('header.php');
+ require_once('header_v2.php');
  ?>
-<script src="<?php echo bloginfo('template_url'); ?>/js/blog.js"></script>
-</head>
+
 <body>
+<?php include_once('googletag.php'); //todo: проверить гугл тэг ?>
 
-<?php include_once('googletag.php'); ?>
+<!-- Page -->
+<div class="page selectArticle" id="root">
+	<div class="page__layout">
+		<a href="/blog/" class="backButton">
+			<span class="backButton__caption">Назад в блог</span>
+		</a>
 
-<div class="b_wraper">
-<div class="blog_topbg"></div>
-
-<?php require('feedcall.php'); ?>	
-
-	<div class="fcontainer"></div>
-	<div class="b_block1_blog">
-	
-		<div class="b_band b_band1">
-			<div class="header1">
-				<a href="/" class="logo"><img alt="" src="<?php echo bloginfo('template_url'); ?>/images/logo_blog.png" /></a>
-				<ul class="b_toplink_blog">
-					<li><a href="/">Вход в личный кабинет</a></li>
-				</ul>
-				<ul class="select_city_blog">
-					<li><p class="regselect_blog ph1" style="border:none;">Москва</p></li>
-					<li><p class="regselect_blog ph2">Н.Новгород</p></li>
-					<li><p class="regselect_blog ph3">С.-Петербург</p></li>
-				</ul>
-				<p class="tphone_blog">
-					<span style="display:block;">(499) 400-24-91</span>
-					<span>(831) 230-30-35</span>
-					<span>(812) 600-16-22</span>
-				</p>
-				<p class="fcall fcall_blogs">Заказать обратный звонок</p>
-				<p class="regakk"><a href="http://analytics.alloka.ru/sign_up">Зарегистрировать аккаунт</a></p>
-			
-			
-				<ul class="b_menu b_menu_blog">
-					<li><a href="/o-kompanii/">О компании</a></li>
-					<li><a href="/otzyivyi/">Отзывы клиентов</a></li>
-					<li><a href="/blog/">Блог</a></li>
-				</ul>	
-			</div>
-			
-			
-			
-			<div class="content1 content1_in">
-				<a href="/analitika-kak-eto-rabotaet/" class="icons ianalitics_blog "><span>Alloka аналитика</span></a>
-				<a href="/o-platforme/" class="icons iplatf_blog"><span>Alloka платформа</span></a>
-			</div>
-		</div>
-	</div>
-	
-	<div class="b_block_blog2">
-		<div class="b_band b_blog_band2">
-			<h1 class="title_center">Здесь собраны все мысли<br /><span>компании Alloka</span></h1>
-			
-			<div class="b_blog_top">
-			
-			<div class="b_blog_top_right singleright">
-					<div class="blog_cats">
-						<div class="blog_cats_top"></div>
-						<!--<div class="blog_cats_main">
-							<p class="blog_cats_title"><b>Мы пишем на темы:</b></p>
-							<?php wp_tag_cloud('smallest=8&largest=20&number=35'); ?>
-							
-						</div>-->
-						<div class="blog_cats_bot"></div>
+		<div class="selectArticle__wrapper">
+			<article class="selectArticle__main article page__blockLayout">
+				<?
+				while ( have_posts() ){
+					the_post();
+					$thumbnail = get_the_post_thumbnail_url();
+					$post_tags = get_the_tags();
+					$date = get_the_date('j F Y');
+					$link = get_permalink();
+					?>
+					<div class="article__header articleHeader">
+						<?
+						foreach ($post_tags as $tag){
+							?>
+							<a href="/tag/<?=$tag->slug?>/" class="articleHeader__tag tag"># <?=$tag->name?></a>
+							<?
+						}
+						?>
+						<time class="articleHeader__date"><?=$date?></time>
 					</div>
-					
-					<!-- search form -->
-					<?php require ('search_form.php'); ?>
-					
-				</div>
-				
-			
-				<div class="b_blog_top_left singleart">
-					<?php if(have_posts()) : while(have_posts()) : the_post(); ?>
-					<h1><?php the_title(); ?></h2><br />
-					<?php the_content(); ?>
-					<div class="sa_tags top_border"><b>Теги:</b> <?php the_tags(''); ?></div>
-					<div class="sa_tags"><b>Похожие статьи:</b><br /><?php digatalart_tag_rel_post(); ?></div>
-					
-					<div class="b_likes">
-					<p class="like_title">Понравилась статья? Поделись ссылочкой с друзьями:</p>
-						<div class="b_likes_in">
-								
-								<div>
-								<?php 
-								$pageURL = get_permalink ();
-								echo '<iframe src="//www.facebook.com/plugins/like.php?href='.$pageURL.'&send=false&layout=button_count&width=110&show_faces=true&action=like&colorscheme=light&font&height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:140px; height:21px;" allowTransparency="true"></iframe>';
-								?>
-								</div>
-								<div><a href="http://twitter.com/share" class="twitter-share-button" data-count="horizontal">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
-															
-								<div><!-- Разместите этот тег в том месте, где должна отображаться кнопка +1 -->
-								<g:plusone size="medium"></g:plusone></div>
-									
-								<!-- Put this div tag to the place, where the Like block will be -->
-								<div>
-									<div id="vk_like"></div>
-									<script type="text/javascript">
-									VK.Widgets.Like("vk_like", {type: "button"});
-									</script>
-								</div>
+
+					<div class="article__content">
+						<h1>
+							<?echo$title = get_the_title();?>
+						</h1>
+						<?
+						if($thumbnail){
+							?><img src="<?=$thumbnail?>" alt="<?=$title?>"><?
+						}
+						?>
+						<div class="content">
+							<?=get_the_content()?>
 						</div>
 					</div>
-				<?php endwhile; ?>
-				<?php else : ?>	
-					<div>
-						К сожалению, по вашему запросу ничего не найдено.
+					<?
+				}
+				?>
+
+				<div class="article__footer">
+					<div class="article__footerTitle">
+						Полезно?<br />
+						Сохрани себе
 					</div>
-				<?php endif; ?>
+					<div class="article__actionLinks actionLinks">
+						<a href="#" onclick="Share.odnoklassniki('<?=$link?>', '<?=$title?>','<?=$thumbnail?>'); return false;" target="_blank" class="actionLinks__item actionLinks__item_odnoklassniki"></a>
+						<a href="#" onclick="Share.vkontakte('<?=$link?>','<?=$title?>','<?=$thumbnail?>',''); return false;" target="_blank" class="actionLinks__item actionLinks__item_vk"></a>
+						<a href="#" onclick="Share.telegram('<?=$link?>','<?=urlencode($title)?>'); return false;" class="actionLinks__item actionLinks__item_telegram"></a>
+						<a href="#" onclick="Share.mailru('<?=$link?>','<?=$title?>','<?=$thumbnail?>',''); return false;" class="actionLinks__item actionLinks__item_moy-mir"></a>
+					</div>
+				</div>
+			</article>
+
+			<aside class="selectArticle__aside aside">
+				<div class="aside__formBlock">
+					<div class="page__blockLayout aside__formLayout">
+						<form method="post" class="aside__form subscribe_form">
+							<div class="aside__formTitle">Хотите получать новые записи о возможностях Аллоки?</div>
+
+							<div class="aside__field field">
+								<input name="email" type="email" class="aside__fieldInput aside__fieldInput_message field__input" placeholder="Ваш е-мэйл" required>
+								<span class="field__error hide">Что-то пошло не так</span>
+							</div>
+
+							<button class="button">Подписаться</button>
+						</form>
+
+						<div class="aside__successMessage hide">
+							<p>
+								Вы успешно подписались!<br />
+								Спасибо!
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<div class="aside__divider"></div>
+
+				<div class="aside__taglist">
+					<p class="aside__taglistTitle">Также пишем о</p>
+					<?$tags = get_tags(array('orderby' => 'count', 'order'   => 'DESC', 'number' => 10));?>
+					<ul class="taglist taglist_column">
+						<?
+						foreach ( $tags as $tag ) {
+							$tag_link = get_tag_link($tag->term_id);
+							echo "<li class=\"taglist__item\"><a href='{$tag_link}' title='{$tag->name} Tag' class='tag'># {$tag->name}</a></li>";
+						}
+						?>
+					</ul>
+				</div>
+			</aside>
+		</div>
+
+		<div class="selectArticle__news">
+			<div class="selectArticle__newsHeader">
+				<h2 class="selectArticle__newsTitle title">И еще новости</h2>
+				<a href="/blog/" class="selectArticle__newsButton button button_secondary">Все новости</a>
+			</div>
+
+			<div class="selectArticle__newsBody news">
+				<?
+				$exclude = get_the_ID();
+				?>
+				<div class="news__list">
+					<?include ("includes/posts_list.php")?>
 				</div>
 			</div>
 		</div>
 	</div>
-	
-
-<div class="b_clear"></div>
-
-</div> 
-
-<!--wraper end-->
-<?php require('footer.php'); ?>
+</div>
+<style>
+	.hide{
+		display: none;
+		opacity: 0;
+	}
+	.to_hide{
+		display: none;
+	}
+	.to_hide.show{display: inline-block}
+	.articleHeader.show_tags .to_hide{
+		display: block;
+	}
+	.show_all_tags{display: none}
+	.show_all_tags.active{display: inline-block}
+	.aside__successMessage{transition: opacity .5s ease}
+</style>
+<!--/Page -->
+<?php require('footerv2.php'); ?>
 
 </body>
 </html>
