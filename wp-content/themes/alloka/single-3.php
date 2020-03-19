@@ -28,7 +28,7 @@
 						foreach ($post_tags as $tag){
 							?>
 							<a href="/tag/<?php echo $tag->slug;?>/" class="articleHeader__tag tag"># <?php echo $tag->name;?></a>
-							<?
+							<?php
 						}
 						?>
 						<time class="articleHeader__date"><?php echo $date;?></time>
@@ -38,16 +38,16 @@
 						<h1>
 							<?php echo $title = get_the_title();?>
 						</h1>
-						<?
+						<?php
 						if($thumbnail){
-							?><img src="<?php echo $thumbnail;?>" alt="<?php echo $title;?>"><?
+							?><img src="<?php echo $thumbnail;?>" alt="<?php echo $title;?>"><?php
 						}
 						?>
 						<div class="content">
 							<?php echo get_the_content();?>
 						</div>
 					</div>
-					<?
+					<?php
 				}
 				?>
 
