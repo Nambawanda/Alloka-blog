@@ -44,7 +44,7 @@
 						}
 						?>
 						<div class="content">
-							<?php echoget_the_content()?>
+							<?php echo get_the_content();?>
 						</div>
 					</div>
 					<?
