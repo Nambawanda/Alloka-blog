@@ -27,7 +27,7 @@
 						<?php
 						foreach ($post_tags as $tag){
 							?>
-							<a href="/tag/<?php echo $tag->slug?>/" class="articleHeader__tag tag"># <?php echo $tag->name;?></a>
+							<a href="/tag/<?php echo $tag->slug;?>/" class="articleHeader__tag tag"># <?php echo $tag->name;?></a>
 							<?
 						}
 						?>
@@ -36,11 +36,11 @@
 
 					<div class="article__content">
 						<h1>
-							<?php echo$title = get_the_title();?>
+							<?php echo $title = get_the_title();?>
 						</h1>
 						<?
 						if($thumbnail){
-							?><img src="<?php echo$thumbnail;?>" alt="<?php echo$title;?>"><?
+							?><img src="<?php echo $thumbnail;?>" alt="<?php echo $title;?>"><?
 						}
 						?>
 						<div class="content">
@@ -57,10 +57,10 @@
 						Сохрани себе
 					</div>
 					<div class="article__actionLinks actionLinks">
-						<a href="#" onclick="Share.odnoklassniki('<?php echo$link;?>', '<?php echo$title;?>','<?php echo$thumbnail;?>'); return false;" target="_blank" class="actionLinks__item actionLinks__item_odnoklassniki"></a>
-						<a href="#" onclick="Share.vkontakte('<?php echo$link;?>','<?php echo$title;?>','<?php echo$thumbnail;?>',''); return false;" target="_blank" class="actionLinks__item actionLinks__item_vk"></a>
-						<a href="#" onclick="Share.telegram('<?php echo$link;?>','<?php echo urlencode($title);?>'); return false;" class="actionLinks__item actionLinks__item_telegram"></a>
-						<a href="#" onclick="Share.mailru('<?php echo$link;?>','<?php echo$title;?>','<?php echo$thumbnail;?>',''); return false;" class="actionLinks__item actionLinks__item_moy-mir"></a>
+						<a href="#" onclick="Share.odnoklassniki('<?php echo $link;?>', '<?php echo $title;?>','<?php echo $thumbnail;?>'); return false;" target="_blank" class="actionLinks__item actionLinks__item_odnoklassniki"></a>
+						<a href="#" onclick="Share.vkontakte('<?php echo $link;?>','<?php echo $title;?>','<?php echo $thumbnail;?>',''); return false;" target="_blank" class="actionLinks__item actionLinks__item_vk"></a>
+						<a href="#" onclick="Share.telegram('<?php echo $link;?>','<?php echo urlencode($title);?>'); return false;" class="actionLinks__item actionLinks__item_telegram"></a>
+						<a href="#" onclick="Share.mailru('<?php echo $link;?>','<?php echo $title;?>','<?php echo $thumbnail;?>',''); return false;" class="actionLinks__item actionLinks__item_moy-mir"></a>
 					</div>
 				</div>
 			</article>
