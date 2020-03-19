@@ -116,7 +116,7 @@
 				$exclude = get_the_ID();
 				?>
 				<div class="news__list">
-					<?php include ("includes/posts_list.php")?>
+					<?php include ("includes/posts_list.php");?>
 				</div>
 			</div>
 		</div>
