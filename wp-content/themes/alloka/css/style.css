@@ -829,6 +829,9 @@ a {
 	max-width: 100%;
 	height: auto
 }
+.article__content iframe{
+	height: 300px;
+}
 
 .article__content blockquote:not(:first-child), .article__content iframe:not(:first-child), .article__content img:not(:first-child), .article__content q:not(:first-child), .article__content video:not(:first-child) {
 	margin-top: 30px
