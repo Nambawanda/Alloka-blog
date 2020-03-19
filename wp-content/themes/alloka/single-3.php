@@ -15,7 +15,7 @@
 
 		<div class="selectArticle__wrapper">
 			<article class="selectArticle__main article page__blockLayout">
-				<?
+				<?php
 				while ( have_posts() ){
 					the_post();
 					$thumbnail = get_the_post_thumbnail_url();
@@ -24,27 +24,27 @@
 					$link = get_permalink();
 					?>
 					<div class="article__header articleHeader">
-						<?
+						<?php
 						foreach ($post_tags as $tag){
 							?>
-							<a href="/tag/<?=$tag->slug?>/" class="articleHeader__tag tag"># <?=$tag->name?></a>
+							<a href="/tag/<?php echo $tag->slug?>/" class="articleHeader__tag tag"># <?php echo $tag->name;?></a>
 							<?
 						}
 						?>
-						<time class="articleHeader__date"><?=$date?></time>
+						<time class="articleHeader__date"><?php echo $date;?></time>
 					</div>
 
 					<div class="article__content">
 						<h1>
-							<?echo$title = get_the_title();?>
+							<?php echo$title = get_the_title();?>
 						</h1>
 						<?
 						if($thumbnail){
-							?><img src="<?=$thumbnail?>" alt="<?=$title?>"><?
+							?><img src="<?php echo$thumbnail;?>" alt="<?php echo$title;?>"><?
 						}
 						?>
 						<div class="content">
-							<?=get_the_content()?>
+							<?php echoget_the_content()?>
 						</div>
 					</div>
 					<?
@@ -57,10 +57,10 @@
 						Сохрани себе
 					</div>
 					<div class="article__actionLinks actionLinks">
-						<a href="#" onclick="Share.odnoklassniki('<?=$link?>', '<?=$title?>','<?=$thumbnail?>'); return false;" target="_blank" class="actionLinks__item actionLinks__item_odnoklassniki"></a>
-						<a href="#" onclick="Share.vkontakte('<?=$link?>','<?=$title?>','<?=$thumbnail?>',''); return false;" target="_blank" class="actionLinks__item actionLinks__item_vk"></a>
-						<a href="#" onclick="Share.telegram('<?=$link?>','<?=urlencode($title)?>'); return false;" class="actionLinks__item actionLinks__item_telegram"></a>
-						<a href="#" onclick="Share.mailru('<?=$link?>','<?=$title?>','<?=$thumbnail?>',''); return false;" class="actionLinks__item actionLinks__item_moy-mir"></a>
+						<a href="#" onclick="Share.odnoklassniki('<?php echo$link;?>', '<?php echo$title;?>','<?php echo$thumbnail;?>'); return false;" target="_blank" class="actionLinks__item actionLinks__item_odnoklassniki"></a>
+						<a href="#" onclick="Share.vkontakte('<?php echo$link;?>','<?php echo$title;?>','<?php echo$thumbnail;?>',''); return false;" target="_blank" class="actionLinks__item actionLinks__item_vk"></a>
+						<a href="#" onclick="Share.telegram('<?php echo$link;?>','<?php echo urlencode($title);?>'); return false;" class="actionLinks__item actionLinks__item_telegram"></a>
+						<a href="#" onclick="Share.mailru('<?php echo$link;?>','<?php echo$title;?>','<?php echo$thumbnail;?>',''); return false;" class="actionLinks__item actionLinks__item_moy-mir"></a>
 					</div>
 				</div>
 			</article>
@@ -92,9 +92,9 @@
 
 				<div class="aside__taglist">
 					<p class="aside__taglistTitle">Также пишем о</p>
-					<?$tags = get_tags(array('orderby' => 'count', 'order'   => 'DESC', 'number' => 10));?>
+					<?php $tags = get_tags(array('orderby' => 'count', 'order'   => 'DESC', 'number' => 10));?>
 					<ul class="taglist taglist_column">
-						<?
+						<?php
 						foreach ( $tags as $tag ) {
 							$tag_link = get_tag_link($tag->term_id);
 							echo "<li class=\"taglist__item\"><a href='{$tag_link}' title='{$tag->name} Tag' class='tag'># {$tag->name}</a></li>";
@@ -112,11 +112,11 @@
 			</div>
 
 			<div class="selectArticle__newsBody news">
-				<?
+				<?php
 				$exclude = get_the_ID();
 				?>
 				<div class="news__list">
-					<?include ("includes/posts_list.php")?>
+					<?php include ("includes/posts_list.php")?>
 				</div>
 			</div>
 		</div>

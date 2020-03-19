@@ -26,39 +26,39 @@ foreach ($lastposts as $post) {
 		?>
 		<div class="mainCardContainer">
 			<div class="mainCard">
-				<?if($thumbnail){?>
+				<?php if($thumbnail){?>
 				<div class="mainCard__image"
 					 style="background-image: url('<?= $thumbnail ?>')"></div>
-				<?}?>
+				<?php }?>
 				<div class="mainCard__content">
 					<div class="mainCard__contentHeader articleHeader">
-						<?
+						<?php
 						$post_tags = wp_get_post_tags($post->ID, array('orderby' => 'count', 'order' => 'DESC'));
 						$count = count($post_tags);
 						$i = 0;
 						foreach ($post_tags as $post_tag) {
 							$tag_link = get_tag_link($post_tag->term_id);
-							?><a href="<?= $tag_link ?>"
-								 class="articleHeader__tag tag <?= (++$i > $max_tags_per_post) ? 'to_hide' : '' ?>">
-							# <?= $post_tag->name ?></a><?
+							?><a href="<?php echo $tag_link ?>"
+								 class="articleHeader__tag tag <?php echo (++$i > $max_tags_per_post) ? 'to_hide' : '' ?>">
+							# <?php echo $post_tag->name ?></a><?php
 						}
 						if ($count > $max_tags_per_post) {
 							$hided = $count - $max_tags_per_post;
 							?><a href="#" class="articleHeader__tag tagButton show_all_tags">показать
-							еще <?= $hided ?></a><?
+							еще <?php echo $hided ?></a><?php
 						}
 						?>
 						<!--								<a href="#" class="articleHeader__tag tagButton tagButton_active">свернуть</a>-->
-						<time class="articleHeader__date"><? the_date('j F Y') ?></time>
+						<time class="articleHeader__date"><?php the_date('j F Y') ?></time>
 					</div>
 
-					<a href="<?= get_permalink(); ?>" class="mainCard__title"><?= get_the_title(); ?></a>
+					<a href="<?php echo get_permalink(); ?>" class="mainCard__title"><?php echo get_the_title(); ?></a>
 				</div>
 			</div>
 		</div>
 		<div class="news">
 			<div class="news__list">
-		<?
+		<?php
 		$first = false;
 	} else {
 		$post_tags = wp_get_post_tags($post->ID, array('orderby' => 'count', 'order' => 'DESC'));

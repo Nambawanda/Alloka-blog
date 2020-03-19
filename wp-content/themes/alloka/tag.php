@@ -15,9 +15,9 @@ require_once('header_v2.php');
 		</form>
 
 		<h1 class="page__title title">Наши мысли</h1>
-		<?$tags = get_tags(array('orderby' => 'count', 'order'   => 'DESC', 'number' => 10));?>
+		<?php $tags = get_tags(array('orderby' => 'count', 'order'   => 'DESC', 'number' => 10));?>
 		<ul class="page__taglist taglist">
-			<?
+			<?php
 			foreach ( $tags as $tag ) {
 				$tag_link = get_tag_link($tag->term_id);
 				echo "<li class=\"taglist__item\"><a href='{$tag_link}' title='{$tag->name} Tag' class='tag".(($tag->slug == $wp_query->query['tag'])? ' tag_active' : '')."'># {$tag->name}</a></li>";
@@ -27,15 +27,15 @@ require_once('header_v2.php');
 			}
 			?>
 		</ul>
-		<div class="articlesByTag__newsTitle">Все новости по тегу “<?=$current_tag?>”</div>
+		<div class="articlesByTag__newsTitle">Все новости по тегу “<?php echo $current_tag;?>”</div>
 			<div class="news">
 				<div class="news__list">
-					<?
+					<?php
 					include('includes/posts_list.php');
 					?>
 				</div>
 				<div class="news__footer">
-					<a href="#" class="news__showMore button button_secondary" data-tag="<?=$wp_query->query['tag']?>" data-page="0" data-pages="<?=$pages_count?>">Показать еще</a>
+					<a href="#" class="news__showMore button button_secondary" data-tag="<?php echo $wp_query->query['tag'];?>" data-page="0" data-pages="<?php echo $pages_count;?>">Показать еще</a>
 				</div>
 			</div>
 		</div>
