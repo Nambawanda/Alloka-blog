@@ -826,7 +826,8 @@ a {
 }
 
 .article__content iframe, .article__content img, .article__content video {
-	max-width: 100%
+	max-width: 100%;
+	height: auto
 }
 
 .article__content blockquote:not(:first-child), .article__content iframe:not(:first-child), .article__content img:not(:first-child), .article__content q:not(:first-child), .article__content video:not(:first-child) {
