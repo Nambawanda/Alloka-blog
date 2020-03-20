@@ -25,10 +25,13 @@
 					?>
 					<div class="article__header articleHeader">
 						<?php
-						foreach ($post_tags as $tag){
-							?>
-							<a href="/tag/<?php echo $tag->slug;?>/" class="articleHeader__tag tag"># <?php echo $tag->name;?></a>
-							<?php
+						if (is_array($post_tags)) {
+							foreach ($post_tags as $tag) {
+								?>
+								<a href="/tag/<?php echo $tag->slug; ?>/"
+								   class="articleHeader__tag tag"># <?php echo $tag->name; ?></a>
+								<?php
+							}
 						}
 						?>
 						<time class="articleHeader__date"><?php echo $date;?></time>
