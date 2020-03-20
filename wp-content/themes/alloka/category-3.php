@@ -7,9 +7,9 @@
 <!-- Page -->
 <div class="page" id="root">
 	<div class="page__layout">
-		<form action="#" class="page__search search">
+		<form role="search" method="get" id="searchform" action="/blog/" class="page__search search">
 			<label class="search__field">
-				<input type="text" class="search__input" placeholder="Искать по статьям" required>
+				<input type="text" class="search__input" placeholder="Искать по статьям" name="s" id="s" required>
 				<button class="search__button"></button>
 			</label>
 		</form>
