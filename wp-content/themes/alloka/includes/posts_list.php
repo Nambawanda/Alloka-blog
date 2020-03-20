@@ -3,17 +3,20 @@ $filter = array('numberposts' => -1, 'category' => 3);
 if(isset($wp_query->query['tag'])){
 	$filter['tag'] = $wp_query->query['tag'];
 	$first = false;
-	$filter['numberposts'] = 6;
 }else{
 	$first = true;
-	$filter['numberposts'] = 7;
 }
 $posts = get_posts($filter);
-$pages_count = abs(ceil((count($posts) - 7) / 12));
+$pages_count = abs(ceil((count($posts) - $filter['numberposts']) / 12));
 if($exclude){
 	$filter['numberposts'] = 4;
 	$filter['exclude'] = $exclude;
 	$first = false;
+}
+if(isset($wp_query->query['tag'])){
+	$filter['numberposts'] = 6;
+}else{
+	$filter['numberposts'] = 7;
 }
 $lastposts = get_posts($filter);
 $news_column1 = '<div class="news__column">';
