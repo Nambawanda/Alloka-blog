@@ -2,11 +2,14 @@
 $filter = array('numberposts' => -1, 'category' => 3);
 if($wp_query->query['tag']){
 	$filter['tag'] = $wp_query->query['tag'];
+	$first = false;
+	$filter['numberposts'] = 6;
+}else{
+	$first = true;
+	$filter['numberposts'] = 7;
 }
-$first = ($wp_query->query['tag'])? false : true;
 $posts = get_posts($filter);
 $pages_count = abs(ceil((count($posts) - 7) / 12));
-$filter['numberposts'] = ($wp_query->query['tag'])? 6 : 7;
 if($exclude){
 	$filter['numberposts'] = 4;
 	$filter['exclude'] = $exclude;

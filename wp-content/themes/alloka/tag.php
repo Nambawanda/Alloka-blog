@@ -31,6 +31,7 @@ require_once('header_v2.php');
 			<div class="news">
 				<div class="news__list">
 					<?php
+					$exclude = false;
 					include('includes/posts_list.php');
 					?>
 				</div>

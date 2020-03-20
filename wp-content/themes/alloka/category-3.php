@@ -24,8 +24,8 @@
 			}
 			?>
 		</ul>
-
 				<?php
+				$exclude = false;
 				include('includes/posts_list.php');
 				?>
 			</div>
