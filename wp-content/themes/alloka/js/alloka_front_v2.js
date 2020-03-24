@@ -3,7 +3,8 @@ $(document).ready(function () {
 	$('.news__showMore').on('click', function () {
 		var page = parseInt($(this).attr('data-page')),
 			pages = parseInt($(this).attr('data-pages')),
-			loader = $(this), tag = $(this).attr('data-tag');
+			loader = $(this), tag = $(this).attr('data-tag'),
+			language = loader.attr('data-lang');
 
 		if(loader.attr('data-busy') == 'yes'){
 			return false;
@@ -18,6 +19,7 @@ $(document).ready(function () {
 				data   : {
 					page: page,
 					action: 'get_posts',
+					language: language,
 					tag: tag
 				},
 				success: function ( res ) {

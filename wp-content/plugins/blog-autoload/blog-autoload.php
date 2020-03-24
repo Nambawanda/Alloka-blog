@@ -39,7 +39,7 @@ add_action('wp_head', 'js_test_plugin_front_variables');
 function get_posts_callback()
 {
 	$first_page_count = ($_REQUEST['tag'])? 6 : 7;
-	switch (get_locale()){
+	switch ($_REQUEST['language']){
 		case "tr_TR": {
 			$language = 'tr';
 			$category = '';

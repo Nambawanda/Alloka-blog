@@ -7,7 +7,7 @@ require_once('header_v2.php');
 <!-- Page -->
 <div class="page" id="root">
 	<div class="page__layout">
-		<form role="search" method="get" id="searchform" action="/blog/" class="page__search search">
+		<form role="search" method="get" id="searchform" action="<?php echo $lang_slug;?>" class="page__search search">
 			<label class="search__field">
 				<input type="text" class="search__input" placeholder="Искать по статьям" name="s" id="s" required>
 				<button class="search__button"></button>

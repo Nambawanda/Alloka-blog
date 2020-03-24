@@ -9,7 +9,7 @@
 <!-- Page -->
 <div class="page selectArticle" id="root">
 	<div class="page__layout">
-		<a href="<?php echo $lang_slug;?>/blog/" class="backButton">
+		<a href="<?php echo $lang_slug;?>" class="backButton">
 			<span class="backButton__caption"><?php echo pll__('Назад в блог')?></span>
 		</a>
 

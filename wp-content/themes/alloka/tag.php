@@ -37,7 +37,7 @@ require_once('header_v2.php');
 				</div>
 				<div class="news__footer">
 					<?php if($pages_count > 0){?>
-					<a href="#" class="news__showMore button button_secondary" data-tag="<?php echo $wp_query->query['tag'];?>" data-page="0" data-pages="<?php echo $pages_count;?>"><?php echo pll__('Показать еще');?></a>
+					<a href="#" class="news__showMore button button_secondary" data-tag="<?php echo $wp_query->query['tag'];?>"  data-lang="<?php echo get_locale();?>" data-page="0" data-pages="<?php echo $pages_count;?>"><?php echo pll__('Показать еще');?></a>
 					<?php }?>
 				</div>
 			</div>

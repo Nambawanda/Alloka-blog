@@ -30,7 +30,9 @@
 				?>
 			</div>
 			<div class="news__footer">
-				<a href="#" class="news__showMore button button_secondary" data-page="0" data-pages="<?php echo $pages_count?>"><?php echo pll__('Показать еще');?></a>
+				<?php if($pages_count > 0){?>
+				<a href="#" class="news__showMore button button_secondary" data-lang="<?php echo get_locale();?>" data-page="0" data-pages="<?php echo $pages_count?>"><?php echo pll__('Показать еще');?></a>
+				<?php }?>
 			</div>
 
 		</div>
