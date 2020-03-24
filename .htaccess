@@ -2,6 +2,9 @@ php_flag display_startup_errors on
 php_flag display_errors on
 RewriteEngine on
 # BEGIN WordPress
+# Строки между `BEGIN WordPress` и `END WordPress` были созданы автоматически.
+# Они могут быть изменены только фильтрами WordPress.
+# Все изменения между этими отметками будут перезаписаны.
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteBase /

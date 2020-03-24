@@ -14,7 +14,7 @@ require_once('header_v2.php');
 			</label>
 		</form>
 
-		<h1 class="page__title title">Наши мысли</h1>
+		<h1 class="page__title title"><?php echo pll__('Наши мысли')?></h1>
 		<?php $tags = get_tags(array('orderby' => 'count', 'order'   => 'DESC', 'number' => 10));?>
 		<ul class="page__taglist taglist">
 			<?php

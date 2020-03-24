@@ -6,7 +6,7 @@ $column = 1;
 $max_tags_per_post = 3;
 if(have_posts()){
 	?>
-	<div class="articlesByTag__newsTitle">Все новости по запросу “<?php echo $wp_query->query['s'];?>”</div>
+	<div class="articlesByTag__newsTitle"><?php echo pll__('Все новости по запросу');?> “<?php echo $wp_query->query['s'];?>”</div>
 	<div class="news">
 		<div class="news__list">
 	<?php

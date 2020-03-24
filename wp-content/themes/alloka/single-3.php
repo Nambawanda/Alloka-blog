@@ -9,8 +9,8 @@
 <!-- Page -->
 <div class="page selectArticle" id="root">
 	<div class="page__layout">
-		<a href="/blog/" class="backButton">
-			<span class="backButton__caption">Назад в блог</span>
+		<a href="<?php echo $lang_slug;?>/blog/" class="backButton">
+			<span class="backButton__caption"><?php echo pll__('Назад в блог')?></span>
 		</a>
 
 		<div class="selectArticle__wrapper">
@@ -27,8 +27,9 @@
 						<?php
 						if (is_array($post_tags)) {
 							foreach ($post_tags as $tag) {
+								$tag_link = get_tag_link($tag->term_id);
 								?>
-								<a href="/tag/<?php echo $tag->slug; ?>/"
+								<a href="<?php echo $tag_link;?>/"
 								   class="articleHeader__tag tag"># <?php echo $tag->name; ?></a>
 								<?php
 							}
@@ -56,8 +57,7 @@
 
 				<div class="article__footer">
 					<div class="article__footerTitle">
-						Полезно?<br />
-						Сохрани себе
+						<?php echo pll__('Полезно? Сохрани себе');?>
 					</div>
 					<div class="article__actionLinks actionLinks">
 						<a href="#" onclick="Share.odnoklassniki('<?php echo $link;?>', '<?php echo $title;?>','<?php echo $thumbnail;?>'); return false;" target="_blank" class="actionLinks__item actionLinks__item_odnoklassniki"></a>
@@ -72,20 +72,20 @@
 				<div class="aside__formBlock">
 					<div class="page__blockLayout aside__formLayout">
 						<form method="post" class="aside__form subscribe_form">
-							<div class="aside__formTitle">Хотите получать новые записи о возможностях Аллоки?</div>
+							<div class="aside__formTitle"><?php echo pll__('Хотите получать новые записи о возможностях Аллоки?')?></div>
 
 							<div class="aside__field field">
-								<input name="email" type="email" class="aside__fieldInput aside__fieldInput_message field__input" placeholder="Ваш е-мэйл" required>
-								<span class="field__error hide">Что-то пошло не так</span>
+								<input name="email" type="email" class="aside__fieldInput aside__fieldInput_message field__input" placeholder="<?php echo pll__('Подписаться');?>" required>
+								<span class="field__error hide"><?php echo pll__('Что-то пошло не так');?></span>
 							</div>
 
-							<button class="button">Подписаться</button>
+							<button class="button"><?php echo pll__('Подписаться')?></button>
 						</form>
 
 						<div class="aside__successMessage hide">
 							<p>
-								Вы успешно подписались!<br />
-								Спасибо!
+								<?php echo pll__('Вы успешно подписались!');?><br />
+								<?php echo pll__('Спасибо');?>!
 							</p>
 						</div>
 					</div>
@@ -94,7 +94,7 @@
 				<div class="aside__divider"></div>
 
 				<div class="aside__taglist">
-					<p class="aside__taglistTitle">Также пишем о</p>
+					<p class="aside__taglistTitle"><?php echo pll__('Также пишем о')?></p>
 					<?php $tags = get_tags(array('orderby' => 'count', 'order'   => 'DESC', 'number' => 10));?>
 					<ul class="taglist taglist_column">
 						<?php
@@ -110,8 +110,8 @@
 
 		<div class="selectArticle__news">
 			<div class="selectArticle__newsHeader">
-				<h2 class="selectArticle__newsTitle title">И еще новости</h2>
-				<a href="/blog/" class="selectArticle__newsButton button button_secondary">Все новости</a>
+				<h2 class="selectArticle__newsTitle title"><?php echo pll__('И еще новости');?></h2>
+				<a href="<?php echo $lang_slug;?>" class="selectArticle__newsButton button button_secondary"><?php echo pll__('Все новости');?></a>
 			</div>
 
 			<div class="selectArticle__newsBody news">

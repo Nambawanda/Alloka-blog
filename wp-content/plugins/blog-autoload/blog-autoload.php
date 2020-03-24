@@ -39,12 +39,29 @@ add_action('wp_head', 'js_test_plugin_front_variables');
 function get_posts_callback()
 {
 	$first_page_count = ($_REQUEST['tag'])? 6 : 7;
-	$params = array('numberposts' => 12, 'category' => 3, 'offset' => ($_REQUEST['page'] * 12) + $first_page_count);
+	switch (get_locale()){
+		case "tr_TR": {
+			$language = 'tr';
+			$category = 244;
+			break;
+		}
+		case "en_US":{
+			$language = 'en';
+			$category = 242;
+			break;
+		}
+		default:{
+			$language = 'ru';
+			$category = 3;
+		}
+	}
+	$params = array('numberposts' => 12, 'lang' => $language,'category' => $category, 'offset' => ($_REQUEST['page'] * 12) + $first_page_count);
 	if($_REQUEST['tag']){
 		$params['tag'] = $_REQUEST['tag'];
 	}
 	$posts = get_posts($params);
 	$data = [];
+
 	foreach( $posts as $post ) {
 		$tmp['name'] = $post->post_title;
 		$tmp['thumbnail'] = get_the_post_thumbnail_url($post->ID);

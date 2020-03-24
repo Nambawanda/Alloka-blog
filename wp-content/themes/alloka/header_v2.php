@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="<?php echo get_locale();?>">
 <head>
-	<title><?=wp_title()?></title>
+	<title><?php echo wp_title();?></title>
 	<!-- WP-head -->
 	<?php wp_head();?>
 	<!-- WP-head -->
@@ -19,3 +19,17 @@
 	<!-- CSS -->
 	<link rel="stylesheet" type="text/css" href="<?php bloginfo("template_directory"); ?>/css/style.css">
 </head>
+<?php
+switch (get_locale()){
+	case "tr_TR": {
+		$lang_slug = '/tr/category/blog-tr/';
+		break;
+	}
+	case "en_US":{
+		$lang_slug = '/en/category/blog-en/';
+		break;
+	}
+	default:
+		$lang_slug = '/blog/';
+}
+?>

@@ -1,13 +1,29 @@
 <?php
-$filter = array('numberposts' => -1, 'category' => 3);
+switch (get_locale()){
+	case "tr_TR": {
+		$language = 'tr';
+		$category = 244;
+		break;
+	}
+	case "en_US":{
+		$language = 'en';
+		$category = 242;
+		break;
+	}
+	default:{
+		$language = 'ru';
+		$category = 3;
+	}
+}
+$filter = $wp_query->query;
+$filter['numberposts'] = -1;
+$filter['category'] = $category;
 if(isset($wp_query->query['tag'])){
-	$filter['tag'] = $wp_query->query['tag'];
 	$first = false;
 }else{
 	$first = true;
 }
 $posts = get_posts($filter);
-$pages_count = abs(ceil((count($posts) - $filter['numberposts']) / 12));
 if($exclude){
 	$filter['numberposts'] = 4;
 	$filter['exclude'] = $exclude;
@@ -18,6 +34,8 @@ if(isset($wp_query->query['tag'])){
 }else{
 	$filter['numberposts'] = 7;
 }
+$pages_count = ceil((count($posts) - $filter['numberposts']) / 12);
+
 $lastposts = get_posts($filter);
 $news_column1 = '<div class="news__column">';
 $news_column2 = '<div class="news__column">';
@@ -50,8 +68,7 @@ foreach ($lastposts as $post) {
 						}
 						if ($count > $max_tags_per_post) {
 							$hided = $count - $max_tags_per_post;
-							?><a href="#" class="articleHeader__tag tagButton show_all_tags">показать
-							еще <?php echo $hided ?></a><?php
+							?><a href="#" class="articleHeader__tag tagButton show_all_tags"><?php echo pll__('показать еще');?> <?php echo $hided ?></a><?php
 						}
 						?>
 						<!--								<a href="#" class="articleHeader__tag tagButton tagButton_active">свернуть</a>-->
@@ -81,8 +98,8 @@ foreach ($lastposts as $post) {
 		}
 		if ($count > $max_tags_per_post) {
 			$hided = $count - $max_tags_per_post;
-			$card .= "<a href=\"#\" class=\"articleHeader__tag tagButton show_all_tags active\">показать еще $hided</a>";
-			$card .= "<a href=\"#\" class=\"articleHeader__tag tagButton show_all_tags\" data-action='hide'>убрать лишнее</a>";
+			$card .= "<a href=\"#\" class=\"articleHeader__tag tagButton show_all_tags active\">".pll__('показать еще')." $hided</a>";
+			$card .= "<a href=\"#\" class=\"articleHeader__tag tagButton show_all_tags\" data-action='hide'>".pll__('убрать лишнее')."</a>";
 		}
 
 		$card .= "

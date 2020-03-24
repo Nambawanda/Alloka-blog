@@ -1,4 +1,5 @@
-<?php
+<?php require ('single-3.php');
+die();
  require('./wp-blog-header.php');
  require_once('header.php');
  ?>
