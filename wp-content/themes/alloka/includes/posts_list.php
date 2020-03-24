@@ -2,12 +2,12 @@
 switch (get_locale()){
 	case "tr_TR": {
 		$language = 'tr';
-		$category = 244;
+		$category = '';
 		break;
 	}
 	case "en_US":{
 		$language = 'en';
-		$category = 242;
+		$category = '';
 		break;
 	}
 	default:{
