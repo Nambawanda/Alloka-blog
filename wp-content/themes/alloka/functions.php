@@ -187,23 +187,23 @@ add_shortcode('wpb_popular_tags', 'wpb_tag_cloud');
 // Enable shortcode execution in text widget
 add_filter ('widget_text', 'do_shortcode');
 
-pll_register_string( 'Page Title', 'Наши мысли', 'Tamplate');
-pll_register_string( 'Show more', 'Показать еще', 'Tamplate');
-pll_register_string( 'show more', 'показать еще', 'Tamplate');
-pll_register_string( 'hide excess', 'убрать лишнее', 'Tamplate');
-pll_register_string( 'Also write about', 'Также пишем о', 'Tamplate');
-pll_register_string( 'Subscribe title', 'Хотите получать новые записи о возможностях Аллоки?', 'Tamplate');
-pll_register_string( 'Something wrong', 'Что-то пошло не так', 'Tamplate');
-pll_register_string( 'Email placeholder', 'Ваш е-мейл', 'Tamplate');
-pll_register_string( 'Subscribe', 'Подписаться', 'Tamplate');
-pll_register_string( 'Back to blog', 'Назад в блог', 'Tamplate');
-pll_register_string( 'More news', 'И еще новости', 'Tamplate');
-pll_register_string( 'All news', 'Все новости', 'Tamplate');
-pll_register_string( 'All news by tag', 'Все новости по тегу', 'Tamplate');
-pll_register_string( "Save to you'r self", 'Полезно? Сохрани себе', 'Tamplate');
-pll_register_string( "Search", 'Искать по статьям', 'Tamplate');
-pll_register_string( "Successfully subscribed ", 'Вы успешно подписались!', 'Tamplate');
-pll_register_string( "Thanks", 'Спасибо', 'Tamplate');
-pll_register_string( "All news by query", 'Все новости по запросу', 'Tamplate');
+//pll_register_string( 'Page Title', 'Наши мысли', 'Tamplate');
+//pll_register_string( 'Show more', 'Показать еще', 'Tamplate');
+//pll_register_string( 'show more', 'показать еще', 'Tamplate');
+//pll_register_string( 'hide excess', 'убрать лишнее', 'Tamplate');
+//pll_register_string( 'Also write about', 'Также пишем о', 'Tamplate');
+//pll_register_string( 'Subscribe title', 'Хотите получать новые записи о возможностях Аллоки?', 'Tamplate');
+//pll_register_string( 'Something wrong', 'Что-то пошло не так', 'Tamplate');
+//pll_register_string( 'Email placeholder', 'Ваш е-мейл', 'Tamplate');
+//pll_register_string( 'Subscribe', 'Подписаться', 'Tamplate');
+//pll_register_string( 'Back to blog', 'Назад в блог', 'Tamplate');
+//pll_register_string( 'More news', 'И еще новости', 'Tamplate');
+//pll_register_string( 'All news', 'Все новости', 'Tamplate');
+//pll_register_string( 'All news by tag', 'Все новости по тегу', 'Tamplate');
+//pll_register_string( "Save to you'r self", 'Полезно? Сохрани себе', 'Tamplate');
+//pll_register_string( "Search", 'Искать по статьям', 'Tamplate');
+//pll_register_string( "Successfully subscribed ", 'Вы успешно подписались!', 'Tamplate');
+//pll_register_string( "Thanks", 'Спасибо', 'Tamplate');
+//pll_register_string( "All news by query", 'Все новости по запросу', 'Tamplate');
 
 ?>
